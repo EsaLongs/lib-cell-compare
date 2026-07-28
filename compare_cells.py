@@ -24,7 +24,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Pattern, Sequence, Set, Tuple
 
 import openpyxl
-from openpyxl.styles import Alignment
+from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.worksheet.worksheet import Worksheet
 
 # #### Constants
@@ -34,6 +34,11 @@ OUTPUT = "/mnt/c/Users/t00961128/Downloads/NP1PP_vs_C1Y.xlsx"
 
 SHEET_TITLE = "Cell Comparison"
 COL_WIDTHS = {"A": 40, "B": 55, "C": 55}
+FONT_SIZE = 16
+MATCH_FILL = PatternFill(fill_type="solid", fgColor="C6EFCE")
+NORMAL_FONT = Font(size=FONT_SIZE)
+BOLD_FONT = Font(size=FONT_SIZE, bold=True)
+KEY_ALIGNMENT = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
 CellRow = Tuple[str, Optional[str], Optional[str]]
 GroupItem = Tuple[str, bool, bool]
@@ -226,13 +231,28 @@ def _merge_display_key_column(worksheet: Worksheet, rows: Sequence[CellRow]) -> 
 
 
 def _format_worksheet(worksheet: Worksheet, row_count: int) -> None:
-    """Apply column widths and center alignment on the display-key column."""
+    """Apply fonts, fills, widths, and key-column alignment."""
     for column, width in COL_WIDTHS.items():
         worksheet.column_dimensions[column].width = width
 
-    alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    for column in range(1, 4):
+        worksheet.cell(row=1, column=column).font = BOLD_FONT  # noqa
+
     for row_index in range(2, row_count + 2):
-        worksheet.cell(row=row_index, column=1).alignment = alignment
+        key_cell = worksheet.cell(row=row_index, column=1)
+        key_cell.font = BOLD_FONT  # noqa
+        key_cell.alignment = KEY_ALIGNMENT  # noqa
+
+        np_cell = worksheet.cell(row=row_index, column=2)
+        c1_cell = worksheet.cell(row=row_index, column=3)
+        np_cell.font = NORMAL_FONT  # noqa
+        c1_cell.font = NORMAL_FONT  # noqa
+
+        np_val = np_cell.value
+        c1_val = c1_cell.value
+        if np_val and c1_val and np_val == c1_val:
+            np_cell.fill = MATCH_FILL  # noqa
+            c1_cell.fill = MATCH_FILL  # noqa
 
 
 def write_excel(output_path: str, rows: Sequence[CellRow]) -> None:
