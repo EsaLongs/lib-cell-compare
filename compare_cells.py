@@ -3,14 +3,14 @@
 
 Usage:
     python3 compare_cells.py \\
-        --format-filter '"COT.*" "EEQMBD" "EEQMBC" "OPT" "A.{2}$"'
+        --format-filter '"COT.*" "EEQMBD" "EEQMBC" "OPT" "A.{2}$"' \\
+        --format-replace '"FOO ：BAR" "X([0-9]+) : Y\\\\1"'
 
-Reads NP1PP.list and C1Y.list, strips regex filters from each full cell
-name in left-to-right order, re-groups by the resulting display key, and
-writes Excel.
+Reads NP1PP.list and C1Y.list, applies regex delete filters then regex
+replacements to each full cell name in left-to-right order, re-groups by
+the resulting display key, and writes Excel.
 
---format-filter takes one string of quote-delimited tokens (shell-style).
-Each token is applied as a regex via re.sub, in the given order.
+Quoted tokens are parsed with shlex. Delete filters run before replaces.
 """
 
 from __future__ import annotations
@@ -43,9 +43,11 @@ BORDER_SIDE = Side(style="thin", color="000000")
 TOP_BOTTOM_BORDER = Border(top=BORDER_SIDE, bottom=BORDER_SIDE)
 TOP_BORDER = Border(top=BORDER_SIDE)
 BOTTOM_BORDER = Border(bottom=BORDER_SIDE)
+HALFWIDTH_REPLACE_SEP_RE = re.compile(r"\s*:\s*")
 
 CellRow = Tuple[str, Optional[str], Optional[str]]
 GroupItem = Tuple[str, bool, bool]
+ReplaceRule = Tuple[Pattern[str], str]
 
 
 # #### CLI
@@ -53,8 +55,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description=(
-            "Compare NP1PP and C1Y cell lists after stripping regex "
-            "filters from display keys in left-to-right order."
+            "Compare NP1PP and C1Y cell lists after regex delete filters "
+            "and optional regex replacements on display keys."
         ),
     )
     parser.add_argument(
@@ -63,8 +65,19 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         metavar="TOKENS",
         dest="format_filter",
         help=(
-            "Quote-delimited regex tokens, applied left-to-right, "
+            "Quote-delimited regex tokens to delete, applied left-to-right, "
             "e.g. '\"COT.*\" \"EEQMBD\" \"EEQMBC\" \"OPT\" \"A.{2}$\"'."
+        ),
+    )
+    parser.add_argument(
+        "--format-replace",
+        default="",
+        metavar="MAPPINGS",
+        dest="format_replace",
+        help=(
+            "Quote-delimited regex replacements applied after deletes, "
+            'e.g. \'"FOO ：BAR" "X([0-9]+) : Y\\\\1"\'. '
+            "Use full-width ： or half-width : between pattern and replacement."
         ),
     )
     parser.add_argument(
@@ -85,14 +98,59 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def split_format_filter(raw: str) -> List[str]:
-    """Split --format-filter into quote-delimited regex tokens via shlex."""
+def split_quoted_tokens(raw: str, option_name: str) -> List[str]:
+    """Split a quote-delimited option value into tokens via shlex."""
+    if not raw or not raw.strip():
+        return []
     try:
         tokens = shlex.split(raw, posix=True)
     except ValueError as exc:
-        print(f"Invalid --format-filter quoting: {exc}", file=sys.stderr)
+        print(f"Invalid {option_name} quoting: {exc}", file=sys.stderr)
         sys.exit(2)
     return [token for token in tokens if token]
+
+
+def split_format_filter(raw: str) -> List[str]:
+    """Split --format-filter into quote-delimited regex tokens."""
+    return split_quoted_tokens(raw, "--format-filter")
+
+
+def parse_replace_mapping(token: str) -> Tuple[str, str]:
+    """Split one replace token into (pattern, replacement).
+
+    Prefer full-width '：' as separator; otherwise split on the first
+    half-width ':' with optional surrounding spaces.
+    """
+    if "：" in token:
+        pattern, replacement = token.split("：", 1)
+    else:
+        match = HALFWIDTH_REPLACE_SEP_RE.search(token)
+        if match is None:
+            print(
+                "Invalid --format-replace token "
+                f"(missing '：' or ':'): {token!r}",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        pattern = token[: match.start()]
+        replacement = token[match.end() :]
+    pattern = pattern.strip()
+    replacement = replacement.strip()
+    if not pattern:
+        print(
+            f"Invalid --format-replace token (empty pattern): {token!r}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    return pattern, replacement
+
+
+def parse_format_replace(raw: str) -> List[Tuple[str, str]]:
+    """Parse --format-replace into ordered (pattern, replacement) pairs."""
+    mappings: List[Tuple[str, str]] = []
+    for token in split_quoted_tokens(raw, "--format-replace"):
+        mappings.append(parse_replace_mapping(token))
+    return mappings
 
 
 # #### I/O
@@ -124,11 +182,28 @@ def compile_regex_filters(patterns: Sequence[str]) -> List[Pattern[str]]:
     return compiled
 
 
+def compile_regex_replaces(
+    mappings: Sequence[Tuple[str, str]],
+) -> List[ReplaceRule]:
+    """Compile regex replacement rules, exiting on invalid syntax."""
+    compiled: List[ReplaceRule] = []
+    for pattern, replacement in mappings:
+        try:
+            compiled.append((re.compile(pattern), replacement))
+        except re.error as exc:
+            print(
+                f"Invalid regex in --format-replace: {pattern!r}: {exc}",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+    return compiled
+
+
 def apply_regex_filters(
     value: str,
     regex_filters: Sequence[Pattern[str]],
 ) -> str:
-    """Apply regexes left-to-right; each runs until the value stabilizes."""
+    """Apply delete regexes left-to-right; each runs until stable."""
     for pattern in regex_filters:
         while True:
             updated = pattern.sub("", value)
@@ -138,12 +213,26 @@ def apply_regex_filters(
     return value
 
 
+def apply_regex_replaces(
+    value: str,
+    regex_replaces: Sequence[ReplaceRule],
+) -> str:
+    """Apply replace regexes left-to-right once each via re.sub."""
+    for pattern, replacement in regex_replaces:
+        value = pattern.sub(replacement, value)
+    return value
+
+
 def make_display_key(
     name: str,
     regex_filters: Sequence[Pattern[str]],
+    regex_replaces: Sequence[ReplaceRule] | None = None,
 ) -> str:
-    """Build a display key by stripping regex filters from the full name."""
-    return apply_regex_filters(name, regex_filters)
+    """Build a display key: delete filters first, then replacements."""
+    value = apply_regex_filters(name, regex_filters)
+    if regex_replaces:
+        value = apply_regex_replaces(value, regex_replaces)
+    return value
 
 
 # #### Grouping
@@ -152,11 +241,12 @@ def group_cells(
     np_set: Set[str],
     c1_set: Set[str],
     regex_filters: Sequence[Pattern[str]],
+    regex_replaces: Sequence[ReplaceRule] | None = None,
 ) -> Dict[str, List[GroupItem]]:
     """Group cells by display key with NP/C1 membership flags."""
     groups: Dict[str, List[GroupItem]] = defaultdict(list)
     for cell in all_cells:
-        key = make_display_key(cell, regex_filters)
+        key = make_display_key(cell, regex_filters, regex_replaces)
         groups[key].append((cell, cell in np_set, cell in c1_set))
     return groups
 
@@ -325,8 +415,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print("Error: --format-filter has no tokens after quote parsing.")
         return 2
 
+    replace_mappings = parse_format_replace(args.format_replace)
     regex_filters = compile_regex_filters(patterns)
+    regex_replaces = compile_regex_replaces(replace_mappings)
     print(f"Regex filters (ordered): {patterns}")
+    print(f"Regex replaces (ordered): {replace_mappings}")
 
     np1_cells = read_list(args.np_file)
     c1y_cells = read_list(args.c1_file)
@@ -339,7 +432,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         f"Combined unique: {len(all_cells)}"
     )
 
-    groups = group_cells(all_cells, np_set, c1_set, regex_filters)
+    groups = group_cells(
+        all_cells,
+        np_set,
+        c1_set,
+        regex_filters,
+        regex_replaces,
+    )
     rows = build_rows(groups)
     print(f"Output rows: {len(rows)}, Unique display keys: {len(groups)}")
 
