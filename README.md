@@ -4,19 +4,32 @@
 
 ## 用法
 
-`--format-filter` 只接受正则；每个 token 用双引号包起来，空格分隔，**按从左到右顺序**依次剔除：
+### 删除（`--format-filter`）
+
+每个 token 用双引号包起来，空格分隔，**按从左到右顺序**依次剔除：
 
 ```bash
 python3 compare_cells.py --format-filter '"COT.*" "EEQMBD" "EEQMBC" "OPT" "A.{2}$"'
 ```
 
-含义：先删 `COT` 及之后内容，再删 `EEQMBD` / `EEQMBC` / `OPT`，最后删末尾 `A??`。
+### 替换（`--format-replace`）
 
-可选参数：
+在删除之后执行；格式为 `"原字符串 ：新字符串"`（也支持半角 `:`）：
 
 ```bash
 python3 compare_cells.py \
   --format-filter '"COT.*" "EEQMBD" "EEQMBC" "OPT" "A.{2}$"' \
+  --format-replace '"FOO ：BAR" "X([0-9]+) : Y\1"'
+```
+
+原/新两侧都支持正则；分隔符优先用全角 `：`，若 pattern 本身含半角 `:` 请用全角分隔。
+
+可选路径参数：
+
+```bash
+python3 compare_cells.py \
+  --format-filter '"COT.*" "EEQMBD" "EEQMBC" "OPT" "A.{2}$"' \
+  --format-replace '"FOO ：BAR"' \
   --np-file /path/to/NP1PP.list \
   --c1-file /path/to/C1Y.list \
   --output /path/to/out.xlsx
@@ -41,7 +54,8 @@ pip install -r requirements.txt
 ## 说明
 
 - 读取两个 list 文件，跳过空行与 `rg:` 开头行
-- 对完整 cell 名应用 `--format-filter`（不再硬编码截断 `COT`）
-- token 用 `"` 引用并用空格分界（`shlex` 解析），按顺序 `re.sub`
-- 每个正则反复剔除直到不再匹配，再进入下一个
+- 对完整 cell 名先 `--format-filter` 删除，再 `--format-replace` 替换
+- token 用 `"` 引用并用空格分界（`shlex` 解析）
+- 删除：每个正则反复剔除直到不再匹配；替换：每个规则按顺序 `re.sub` 一次
 - 写出三列 Excel：`display_key | NP1PP | C1Y`，并对相同 display key 合并 A 列
+- Excel：字号 16、首行/首列加粗、B=C 非空浅绿、首行冻结、分组上下边框横跨 A–C
