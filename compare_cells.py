@@ -2,13 +2,15 @@
 """Compare cell lists from two process libraries and write an Excel report.
 
 Usage:
-    python3 compare_cells.py --format-filter 'EEQMBD""EEQMBC""OPT""A.{2}$'
+    python3 compare_cells.py \\
+        --format-filter 'COT.*""EEQMBD""EEQMBC""OPT""A.{2}$'
 
-Reads NP1PP.list and C1Y.list, groups cells by base name (COT prefix),
-strips regex filters from the display key, re-groups, and writes Excel.
+Reads NP1PP.list and C1Y.list, strips regex filters from each full cell
+name in left-to-right order, re-groups by the resulting display key, and
+writes Excel.
 
 --format-filter takes one string; tokens are separated by \"\" and each
-token is applied as a regex via re.sub.
+token is applied as a regex via re.sub, in the given order.
 """
 
 from __future__ import annotations
@@ -29,7 +31,6 @@ NP_FILE = "/mnt/c/Users/t00961128/Downloads/NP1PP.list"
 C1_FILE = "/mnt/c/Users/t00961128/Downloads/C1Y.list"
 OUTPUT = "/mnt/c/Users/t00961128/Downloads/NP1PP_vs_C1Y.xlsx"
 
-COT_PREFIX_RE = re.compile(r"^(.*?)COT")
 TOKEN_SEPARATOR = '""'
 SHEET_TITLE = "Cell Comparison"
 COL_WIDTHS = {"A": 40, "B": 55, "C": 55}
@@ -44,7 +45,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Compare NP1PP and C1Y cell lists after stripping regex "
-            "filters from display keys."
+            "filters from display keys in left-to-right order."
         ),
     )
     parser.add_argument(
@@ -53,8 +54,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         metavar="TOKENS",
         dest="format_filter",
         help=(
-            'Regex tokens separated by "", '
-            "e.g. EEQMBD\"\"EEQMBC\"\"OPT\"\"A.{2}$."
+            'Regex tokens separated by "", applied left-to-right, '
+            'e.g. COT.*""EEQMBD""EEQMBC""OPT""A.{2}$.'
         ),
     )
     parser.add_argument(
@@ -94,12 +95,6 @@ def read_list(filepath: str) -> List[str]:
 
 
 # #### Name helpers
-def get_base(name: str) -> str:
-    """Return the prefix before the first COT occurrence, else the name."""
-    match = COT_PREFIX_RE.match(name)
-    return match.group(1) if match else name
-
-
 def compile_regex_filters(patterns: Sequence[str]) -> List[Pattern[str]]:
     """Compile regex filter patterns, exiting on invalid syntax."""
     compiled: List[Pattern[str]] = []
@@ -119,7 +114,7 @@ def apply_regex_filters(
     value: str,
     regex_filters: Sequence[Pattern[str]],
 ) -> str:
-    """Apply each regex repeatedly until the value stabilizes."""
+    """Apply regexes left-to-right; each runs until the value stabilizes."""
     for pattern in regex_filters:
         while True:
             updated = pattern.sub("", value)
@@ -133,9 +128,8 @@ def make_display_key(
     name: str,
     regex_filters: Sequence[Pattern[str]],
 ) -> str:
-    """Build a display key by stripping regex filters from the COT base."""
-    base = get_base(name)
-    return apply_regex_filters(base, regex_filters)
+    """Build a display key by stripping regex filters from the full name."""
+    return apply_regex_filters(name, regex_filters)
 
 
 # #### Grouping
@@ -272,7 +266,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         return 2
 
     regex_filters = compile_regex_filters(patterns)
-    print(f"Regex filters: {patterns}")
+    print(f"Regex filters (ordered): {patterns}")
 
     np1_cells = read_list(args.np_file)
     c1y_cells = read_list(args.c1_file)
