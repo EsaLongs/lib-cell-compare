@@ -2,10 +2,10 @@
 """Compare cell lists from two process libraries and write an Excel report.
 
 Usage:
-    python3 compare_cells.py TOKEN1 TOKEN2 ...
+    python3 compare_cells.py --format-filter TOKEN1 TOKEN2 ...
 
 Example:
-    python3 compare_cells.py EEQMBD EEQMBC OPT SKF SKR
+    python3 compare_cells.py --format-filter EEQMBD EEQMBC OPT
 
 Reads NP1PP.list and C1Y.list, groups cells by base name (COT prefix),
 strips given tokens from the display key, re-groups, and writes Excel.
@@ -49,9 +49,15 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "tokens",
+        "--format-filter",
         nargs="+",
-        help="Tokens to strip from display keys (exact string match).",
+        required=True,
+        metavar="TOKEN",
+        dest="format_filter",
+        help=(
+            "Tokens to strip from display keys (exact string match), "
+            "e.g. EEQMBD EEQMBC OPT."
+        ),
     )
     parser.add_argument(
         "--np-file",
@@ -232,7 +238,7 @@ def write_excel(output_path: str, rows: Sequence[CellRow]) -> None:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     """Run the cell comparison pipeline."""
     args = parse_args(argv)
-    tokens = sort_tokens(args.tokens)
+    tokens = sort_tokens(args.format_filter)
     print(f"Tokens to strip: {tokens}")
 
     np1_cells = read_list(args.np_file)
