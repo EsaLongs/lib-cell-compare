@@ -2,15 +2,15 @@
 """Compare cell lists from two process libraries and write an Excel report.
 
 Usage:
-    python3 compare_cells.py \\
-        --format-filter '"COT.*" "EEQMBD" "EEQMBC" "OPT" "A.{2}$"' \\
-        --format-replace '"FOO : BAR" "X(\\d{1,2}) : D\\\\1"'
+    python3 compare_cells.py
+    python3 compare_cells.py --format-filter '"FOO"' --format-replace '"BAR : BAZ"'
 
-Reads NP1PP.list and C1Y.list, applies regex delete filters then regex
-replacements to each full cell name in left-to-right order, re-groups by
-the resulting display key, and writes Excel.
+Column A is the logic function root extracted from each full cell name
+(e.g. XOR2D1COT -> XOR2, ND2D1COT -> ND2, FILL12VGCOT -> FILL12).
+Optional --format-filter / --format-replace run before that extraction.
 
-Quoted tokens are parsed with shlex. Delete filters run before replaces.
+Only identical full cell names share a data row; NP-only / C1-only cells
+each get their own row under the shared function root.
 """
 
 from __future__ import annotations
@@ -45,6 +45,106 @@ TOP_BORDER = Border(top=BORDER_SIDE)
 BOTTOM_BORDER = Border(bottom=BORDER_SIDE)
 REPLACE_SEP_RE = re.compile(r"\s*:\s*")
 
+# Mid-name process/optimization markers: cut from here to end (pre-COT).
+FUNCTION_CUT_TOKENS = (
+    "EEQMBD",
+    "EEQMBC",
+    "EEQ",
+    "OPT",
+    "SKFMDB",
+    "SKRMDB",
+    "SKND",
+    "SKPD",
+    "SKRD",
+    "SKF",
+    "SKR",
+    "SKN",
+    "SKP",
+    "TWA",
+)
+
+# Layout / track suffixes peeled only when preceded by a digit.
+_TRAILING_TAG_NAMES = (
+    "CNWBAL",
+    "CNW",
+    "CWBAL",
+    "CWRB",
+    "BALRB",
+    "BAL",
+    "RBD",
+    "AROAF",
+    "3FINC",
+    "3FIN",
+    "SHXP",
+    "DHXP",
+    "XP",
+    "VG",
+    "SH",
+    "DH",
+    "SF",
+    "BF",
+    "FF",
+    "AF",
+    "AR2",
+    "AR1",
+    "ARP",
+    "ARN",
+    "ARQ",
+    "ARO",
+    "AR",
+    "APA",
+    "APB",
+    "APC",
+    "APD",
+    "APM",
+    "APP",
+    "APN",
+    "APQ",
+    "ANS",
+    "AKP",
+    "AKN",
+    "ATA",
+    "ATB",
+    "ATC",
+    "ATS",
+    "ATF",
+    "ALP",
+    "AHB",
+    "AHA",
+    "AHQ",
+    "AHC",
+    "ASB",
+    "ONE",
+    "ME",
+    "ICC",
+    "LN",
+    "TG",
+    "P5",
+    "SC4LP",
+    "SC5LP",
+    "COMB1",
+)
+TRAILING_TAG_RE = re.compile(
+    r"(?<=\d)(?:"
+    + "|".join(
+        re.escape(tag)
+        for tag in sorted(_TRAILING_TAG_NAMES, key=len, reverse=True)
+    )
+    + r")$"
+)
+DRIVE_RE = re.compile(r"[DX]\d+(?:P\d+)?$")
+# Compound / naming roots that still end with D\d+ or X\d+ (must not peel).
+PROTECTED_ROOT_RE = re.compile(
+    r"(?:"
+    r"(?:CK|G)?(?:ND|NR|IND|INR|IIND|IINR|GND|GNR|GNAND|GNOR)\d+|"
+    r"(?:G)?AND\d+|"
+    r"(?:CK|G)?MUX\d+"
+    r")$"
+)
+# Non-digit-prefixed variants peeled after drive strength.
+VARIANT_SUFFIX_RE = re.compile(r"(?:CCB|CCM|SNK|SRC|CW)$")
+COT_AND_AFTER_RE = re.compile(r"COT.*$")
+
 CellRow = Tuple[str, Optional[str], Optional[str]]
 GroupItem = Tuple[str, bool, bool]
 ReplaceRule = Tuple[Pattern[str], str]
@@ -55,18 +155,19 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description=(
-            "Compare NP1PP and C1Y cell lists after regex delete filters "
-            "and optional regex replacements on display keys."
+            "Compare NP1PP and C1Y cell lists by logic function root "
+            "(optional regex delete/replace before extraction)."
         ),
     )
     parser.add_argument(
         "--format-filter",
-        required=True,
+        default="",
         metavar="TOKENS",
         dest="format_filter",
         help=(
-            "Quote-delimited regex tokens to delete, applied left-to-right, "
-            "e.g. '\"COT.*\" \"EEQMBD\" \"EEQMBC\" \"OPT\" \"A.{2}$\"'."
+            "Optional quote-delimited regex tokens to delete before "
+            "function-root extraction, applied left-to-right, "
+            "e.g. '\"FOO\" \"BAR\"'."
         ),
     )
     parser.add_argument(
@@ -214,16 +315,69 @@ def apply_regex_replaces(
     return value
 
 
+def _cut_process_tail(name: str) -> str:
+    """Truncate at the earliest mid-name process/optimization marker."""
+    cut_at = len(name)
+    for token in FUNCTION_CUT_TOKENS:
+        index = name.find(token)
+        if index != -1 and index < cut_at:
+            cut_at = index
+    return name[:cut_at]
+
+
+def _peel_trailing_tags(name: str) -> str:
+    """Peel layout/track suffixes that appear immediately after a digit."""
+    while True:
+        match = TRAILING_TAG_RE.search(name)
+        if match is None:
+            break
+        name = name[: match.start()]
+    return name
+
+
+def _peel_variant_suffixes(name: str) -> str:
+    """Peel known non-drive variant suffixes (CCB/CCM/SNK/SRC/CW)."""
+    while True:
+        match = VARIANT_SUFFIX_RE.search(name)
+        if match is None:
+            break
+        name = name[: match.start()]
+    return name
+
+
+def extract_function_root(name: str) -> str:
+    """Extract the leading logic-function root from a full cell name.
+
+    Works on the raw name (no prior filters required): strip COT and after,
+    cut process/OPT tails, peel layout tags and drive strength, keep size
+    digits in roots such as FILL12 / DCAP10 / ND2 / XOR2.
+    """
+    value = COT_AND_AFTER_RE.sub("", name)
+    value = _cut_process_tail(value)
+    while True:
+        value = _peel_trailing_tags(value)
+        value = _peel_variant_suffixes(value)
+        if PROTECTED_ROOT_RE.search(value):
+            break
+        match = DRIVE_RE.search(value)
+        if match is None:
+            break
+        value = value[: match.start()]
+    value = _peel_trailing_tags(value)
+    value = _peel_variant_suffixes(value)
+    return value
+
+
 def make_display_key(
     name: str,
     regex_filters: Sequence[Pattern[str]],
     regex_replaces: Sequence[ReplaceRule] | None = None,
 ) -> str:
-    """Build a display key: delete filters first, then replacements."""
+    """Build column-A key: optional delete/replace, then function root."""
     value = apply_regex_filters(name, regex_filters)
     if regex_replaces:
         value = apply_regex_replaces(value, regex_replaces)
-    return value
+    return extract_function_root(value)
 
 
 # #### Grouping
@@ -401,15 +555,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     """Run the cell comparison pipeline."""
     args = parse_args(argv)
     patterns = split_format_filter(args.format_filter)
-    if not patterns:
-        print("Error: --format-filter has no tokens after quote parsing.")
-        return 2
-
     replace_mappings = parse_format_replace(args.format_replace)
     regex_filters = compile_regex_filters(patterns)
     regex_replaces = compile_regex_replaces(replace_mappings)
-    print(f"Regex filters (ordered): {patterns}")
-    print(f"Regex replaces (ordered): {replace_mappings}")
+    print(f"Regex filters (ordered): {patterns or '(none)'}")
+    print(f"Regex replaces (ordered): {replace_mappings or '(none)'}")
 
     np1_cells = read_list(args.np_file)
     c1y_cells = read_list(args.c1_file)
@@ -430,7 +580,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         regex_replaces,
     )
     rows = build_rows(groups)
-    print(f"Output rows: {len(rows)}, Unique display keys: {len(groups)}")
+    empty_keys = sum(1 for key in groups if not key)
+    print(
+        f"Output rows: {len(rows)}, Unique function roots: {len(groups)}, "
+        f"Empty roots: {empty_keys}"
+    )
 
     write_excel(args.output, rows)
     print(f"Done! Saved to {args.output}")
