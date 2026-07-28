@@ -14,22 +14,22 @@ python3 compare_cells.py --format-filter '"COT.*" "EEQMBD" "EEQMBC" "OPT" "A.{2}
 
 ### 替换（`--format-replace`）
 
-在删除之后执行；格式为 `"原字符串 ：新字符串"`（也支持半角 `:`）：
+在删除之后执行；格式为 `"原字符串 : 新字符串"`（英文冒号 `:`）：
 
 ```bash
 python3 compare_cells.py \
   --format-filter '"COT.*" "EEQMBD" "EEQMBC" "OPT" "A.{2}$"' \
-  --format-replace '"FOO ：BAR" "X([0-9]+) : Y\1"'
+  --format-replace '"X(\d{1,2}) : D\1"'
 ```
 
-原/新两侧都支持正则；分隔符优先用全角 `：`，若 pattern 本身含半角 `:` 请用全角分隔。
+原/新两侧都支持正则；分隔符必须是英文 `:`（两侧可有空格）。
 
 可选路径参数：
 
 ```bash
 python3 compare_cells.py \
   --format-filter '"COT.*" "EEQMBD" "EEQMBC" "OPT" "A.{2}$"' \
-  --format-replace '"FOO ：BAR"' \
+  --format-replace '"FOO : BAR"' \
   --np-file /path/to/NP1PP.list \
   --c1-file /path/to/C1Y.list \
   --output /path/to/out.xlsx
