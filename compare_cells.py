@@ -4,7 +4,7 @@
 Usage:
     python3 compare_cells.py \\
         --format-filter '"COT.*" "EEQMBD" "EEQMBC" "OPT" "A.{2}$"' \\
-        --format-replace '"FOO ：BAR" "X([0-9]+) : Y\\\\1"'
+        --format-replace '"FOO : BAR" "X(\\d{1,2}) : D\\\\1"'
 
 Reads NP1PP.list and C1Y.list, applies regex delete filters then regex
 replacements to each full cell name in left-to-right order, re-groups by
@@ -43,7 +43,7 @@ BORDER_SIDE = Side(style="thin", color="000000")
 TOP_BOTTOM_BORDER = Border(top=BORDER_SIDE, bottom=BORDER_SIDE)
 TOP_BORDER = Border(top=BORDER_SIDE)
 BOTTOM_BORDER = Border(bottom=BORDER_SIDE)
-HALFWIDTH_REPLACE_SEP_RE = re.compile(r"\s*:\s*")
+REPLACE_SEP_RE = re.compile(r"\s*:\s*")
 
 CellRow = Tuple[str, Optional[str], Optional[str]]
 GroupItem = Tuple[str, bool, bool]
@@ -76,8 +76,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         dest="format_replace",
         help=(
             "Quote-delimited regex replacements applied after deletes, "
-            'e.g. \'"FOO ：BAR" "X([0-9]+) : Y\\\\1"\'. '
-            "Use full-width ： or half-width : between pattern and replacement."
+            'e.g. \'"FOO : BAR" "X(\\d{1,2}) : D\\\\1"\'. '
+            "Use ASCII ':' between pattern and replacement."
         ),
     )
     parser.add_argument(
@@ -116,26 +116,17 @@ def split_format_filter(raw: str) -> List[str]:
 
 
 def parse_replace_mapping(token: str) -> Tuple[str, str]:
-    """Split one replace token into (pattern, replacement).
-
-    Prefer full-width '：' as separator; otherwise split on the first
-    half-width ':' with optional surrounding spaces.
-    """
-    if "：" in token:
-        pattern, replacement = token.split("：", 1)
-    else:
-        match = HALFWIDTH_REPLACE_SEP_RE.search(token)
-        if match is None:
-            print(
-                "Invalid --format-replace token "
-                f"(missing '：' or ':'): {token!r}",
-                file=sys.stderr,
-            )
-            sys.exit(2)
-        pattern = token[: match.start()]
-        replacement = token[match.end() :]
-    pattern = pattern.strip()
-    replacement = replacement.strip()
+    """Split one replace token into (pattern, replacement) on ASCII ':'."""
+    match = REPLACE_SEP_RE.search(token)
+    if match is None:
+        print(
+            "Invalid --format-replace token "
+            f"(missing ':'): {token!r}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    pattern = token[: match.start()].strip()
+    replacement = token[match.end() :].strip()
     if not pattern:
         print(
             f"Invalid --format-replace token (empty pattern): {token!r}",
