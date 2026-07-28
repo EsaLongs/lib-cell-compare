@@ -171,8 +171,10 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         dest="function_keys",
         help=(
             "Ordered function keys to keep as column A. First prefix match "
-            "wins; later keys do not override. Put longer forms first, "
-            "e.g. --function-keys OAI2211 OAI22 AIOI21 AN2 AN3 AN4."
+            "wins; later keys do not override. A digit right after the key "
+            "blocks the match (OAI22 will not take OAI2211). Still put "
+            "longer letter-tailed forms first, e.g. "
+            "--function-keys OAI22OAI21 OAI22 AIOI21 AN2 AN3 AN4."
         ),
     )
     parser.add_argument(
