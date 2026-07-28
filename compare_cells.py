@@ -2,15 +2,15 @@
 """Compare cell lists from two process libraries and write an Excel report.
 
 Usage:
-    python3 compare_cells.py
-    python3 compare_cells.py --format-filter '"FOO"' --format-replace '"BAR : BAZ"'
+    python3 compare_cells.py --function-keys OAI2211 OAI22 AN2 AN3
+    python3 compare_cells.py --function-keys-file preview/function_keys.txt
 
-Column A is the logic function root extracted from each full cell name
-(e.g. XOR2D1COT -> XOR2, ND2D1COT -> ND2, FILL12VGCOT -> FILL12).
-Optional --format-filter / --format-replace run before that extraction.
+Column A is the first --function-keys entry that is a prefix of the cell
+name (order matters: put longer forms first, e.g. OAI2211 before OAI22).
+Matched cells are not reconsidered by later keys.
 
 Only identical full cell names share a data row; NP-only / C1-only cells
-each get their own row under the shared function root.
+each get their own row under the shared function key.
 """
 
 from __future__ import annotations
@@ -138,11 +138,15 @@ PROTECTED_ROOT_RE = re.compile(
     r"(?:"
     r"(?:CK|G)?(?:ND|NR|IND|INR|IIND|IINR|GND|GNR|GNAND|GNOR)\d+|"
     r"(?:G)?AND\d+|"
-    r"(?:CK|G)?MUX\d+"
+    r"(?:CK|G)?MUX\d+|"
+    r"MX\d+"
     r")$"
 )
 # Non-digit-prefixed variants peeled after drive strength.
-VARIANT_SUFFIX_RE = re.compile(r"(?:CCB|CCM|SNK|SRC|CW)$")
+VARIANT_SUFFIX_RE = re.compile(
+    r"(?:CCB|CCM|CCA|SNK|SRC|CW|CWBAL|CWRB|BALRB|BAL|DBA4|NOBCM|"
+    r"TGAR|XNRAR|ARSP)$"
+)
 COT_AND_AFTER_RE = re.compile(r"COT.*$")
 
 CellRow = Tuple[str, Optional[str], Optional[str]]
@@ -155,8 +159,41 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description=(
-            "Compare NP1PP and C1Y cell lists by logic function root "
-            "(optional regex delete/replace before extraction)."
+            "Compare NP1PP and C1Y cell lists by ordered function-key "
+            "prefix match (first hit wins)."
+        ),
+    )
+    parser.add_argument(
+        "--function-keys",
+        nargs="+",
+        default=[],
+        metavar="KEY",
+        dest="function_keys",
+        help=(
+            "Ordered function keys to keep as column A. First prefix match "
+            "wins; later keys do not override. Put longer forms first, "
+            "e.g. --function-keys OAI2211 OAI22 AIOI21 AN2 AN3 AN4."
+        ),
+    )
+    parser.add_argument(
+        "--function-keys-file",
+        default="",
+        metavar="PATH",
+        dest="function_keys_file",
+        help=(
+            "Optional file with one function key per line (# comments / "
+            "blank lines skipped). Keys are appended after --function-keys "
+            "in the same first-match-wins order."
+        ),
+    )
+    parser.add_argument(
+        "--dump-suggested-keys",
+        default="",
+        metavar="PATH",
+        dest="dump_suggested_keys",
+        help=(
+            "Write a longest-first suggested key list from the input cell "
+            "names to PATH, then exit (no Excel)."
         ),
     )
     parser.add_argument(
@@ -166,7 +203,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         dest="format_filter",
         help=(
             "Optional quote-delimited regex tokens to delete before "
-            "function-root extraction, applied left-to-right, "
+            "prefix matching, applied left-to-right, "
             "e.g. '\"FOO\" \"BAR\"'."
         ),
     )
@@ -243,6 +280,43 @@ def parse_format_replace(raw: str) -> List[Tuple[str, str]]:
     for token in split_quoted_tokens(raw, "--format-replace"):
         mappings.append(parse_replace_mapping(token))
     return mappings
+
+
+def load_function_keys_file(filepath: str) -> List[str]:
+    """Load ordered function keys from a text file (one key per line)."""
+    keys: List[str] = []
+    with open(filepath, encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if any(char.isspace() for char in stripped):
+                print(
+                    f"Invalid key in {filepath}:{line_number}: {stripped!r} "
+                    "(keys must be a single token per line)",
+                    file=sys.stderr,
+                )
+                sys.exit(2)
+            keys.append(stripped)
+    return keys
+
+
+def resolve_function_keys(
+    cli_keys: Sequence[str],
+    keys_file: str,
+) -> List[str]:
+    """Merge CLI keys and optional file keys; require a non-empty list."""
+    keys = [key for key in cli_keys if key]
+    if keys_file:
+        keys.extend(load_function_keys_file(keys_file))
+    if not keys:
+        print(
+            "Error: provide --function-keys and/or --function-keys-file "
+            "with at least one key.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    return keys
 
 
 # #### I/O
@@ -336,7 +410,7 @@ def _peel_trailing_tags(name: str) -> str:
 
 
 def _peel_variant_suffixes(name: str) -> str:
-    """Peel known non-drive variant suffixes (CCB/CCM/SNK/SRC/CW)."""
+    """Peel known non-drive variant suffixes (CCA/CCB/SNK/...)."""
     while True:
         match = VARIANT_SUFFIX_RE.search(name)
         if match is None:
@@ -346,11 +420,10 @@ def _peel_variant_suffixes(name: str) -> str:
 
 
 def extract_function_root(name: str) -> str:
-    """Extract the leading logic-function root from a full cell name.
+    """Extract a suggested logic-function root from a full cell name.
 
-    Works on the raw name (no prior filters required): strip COT and after,
-    cut process/OPT tails, peel layout tags and drive strength, keep size
-    digits in roots such as FILL12 / DCAP10 / ND2 / XOR2.
+    Used to build default key lists; runtime grouping uses --function-keys
+    prefix matching instead.
     """
     value = COT_AND_AFTER_RE.sub("", name)
     value = _cut_process_tail(value)
@@ -368,32 +441,89 @@ def extract_function_root(name: str) -> str:
     return value
 
 
+def match_function_key(
+    name: str,
+    function_keys: Sequence[str],
+) -> Optional[str]:
+    """Return the first function key that prefixes name, else None.
+
+    Earlier keys win permanently: a name matched by OAI2211 is never
+    reconsidered by a later OAI22.
+
+    A match requires that the character after the key is not a digit, so
+    OAI22 does not steal OAI221 / OAI2222 / OAI2211; FILL1 does not steal
+    FILL12. Put longer non-numeric tails first when needed (e.g. OAI22OAI21
+    before OAI22, XOR2AOI22 before XOR2).
+    """
+    for key in function_keys:
+        if not name.startswith(key):
+            continue
+        rest = name[len(key) :]
+        if rest and rest[0].isdigit():
+            continue
+        return key
+    return None
+
+
 def make_display_key(
     name: str,
+    function_keys: Sequence[str],
     regex_filters: Sequence[Pattern[str]],
     regex_replaces: Sequence[ReplaceRule] | None = None,
-) -> str:
-    """Build column-A key: optional delete/replace, then function root."""
+) -> Tuple[str, bool]:
+    """Build column-A key via ordered prefix match.
+
+    Returns (key, matched). Unmatched cells keep the post-filter name so
+    gaps stay visible in the spreadsheet.
+    """
     value = apply_regex_filters(name, regex_filters)
     if regex_replaces:
         value = apply_regex_replaces(value, regex_replaces)
-    return extract_function_root(value)
+    matched = match_function_key(value, function_keys)
+    if matched is not None:
+        return matched, True
+    return value, False
 
 
 # #### Grouping
-def group_cells(
+def group_cells(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     all_cells: Sequence[str],
     np_set: Set[str],
     c1_set: Set[str],
+    function_keys: Sequence[str],
     regex_filters: Sequence[Pattern[str]],
     regex_replaces: Sequence[ReplaceRule] | None = None,
-) -> Dict[str, List[GroupItem]]:
-    """Group cells by display key with NP/C1 membership flags."""
+) -> Tuple[Dict[str, List[GroupItem]], List[str]]:
+    """Group cells by function key; return groups and unmatched names."""
     groups: Dict[str, List[GroupItem]] = defaultdict(list)
+    unmatched: List[str] = []
     for cell in all_cells:
-        key = make_display_key(cell, regex_filters, regex_replaces)
+        key, matched = make_display_key(
+            cell,
+            function_keys,
+            regex_filters,
+            regex_replaces,
+        )
+        if not matched:
+            unmatched.append(cell)
         groups[key].append((cell, cell in np_set, cell in c1_set))
-    return groups
+    return groups, unmatched
+
+
+def dump_suggested_keys(
+    cells: Sequence[str],
+    output_path: str,
+) -> List[str]:
+    """Write longest-first suggested keys derived from cell names."""
+    roots = {extract_function_root(cell) for cell in cells}
+    keys = sorted(root for root in roots if root)
+    keys.sort(key=lambda item: (-len(item), item))
+    with open(output_path, "w", encoding="utf-8") as handle:
+        handle.write("# Suggested --function-keys (longest first)\n")
+        handle.write(f"# cells={len(cells)} keys={len(keys)}\n")
+        for key in keys:
+            handle.write(f"{key}\n")
+    return keys
 
 
 def _partition_group(
@@ -551,19 +681,12 @@ def write_excel(output_path: str, rows: Sequence[CellRow]) -> None:
 
 
 # #### Main
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Optional[Sequence[str]] = None) -> int:  # pylint: disable=too-many-locals
     """Run the cell comparison pipeline."""
     args = parse_args(argv)
-    patterns = split_format_filter(args.format_filter)
-    replace_mappings = parse_format_replace(args.format_replace)
-    regex_filters = compile_regex_filters(patterns)
-    regex_replaces = compile_regex_replaces(replace_mappings)
-    print(f"Regex filters (ordered): {patterns or '(none)'}")
-    print(f"Regex replaces (ordered): {replace_mappings or '(none)'}")
 
     np1_cells = read_list(args.np_file)
     c1y_cells = read_list(args.c1_file)
-
     np_set = set(np1_cells)
     c1_set = set(c1y_cells)
     all_cells = sorted(np_set | c1_set)
@@ -572,19 +695,46 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         f"Combined unique: {len(all_cells)}"
     )
 
-    groups = group_cells(
+    if args.dump_suggested_keys:
+        keys = dump_suggested_keys(all_cells, args.dump_suggested_keys)
+        print(
+            f"Wrote {len(keys)} suggested keys to {args.dump_suggested_keys}"
+        )
+        return 0
+
+    function_keys = resolve_function_keys(
+        args.function_keys,
+        args.function_keys_file,
+    )
+    patterns = split_format_filter(args.format_filter)
+    replace_mappings = parse_format_replace(args.format_replace)
+    regex_filters = compile_regex_filters(patterns)
+    regex_replaces = compile_regex_replaces(replace_mappings)
+    print(f"Function keys: {len(function_keys)}")
+    print(f"Regex filters (ordered): {patterns or '(none)'}")
+    print(f"Regex replaces (ordered): {replace_mappings or '(none)'}")
+
+    groups, unmatched = group_cells(
         all_cells,
         np_set,
         c1_set,
+        function_keys,
         regex_filters,
         regex_replaces,
     )
     rows = build_rows(groups)
-    empty_keys = sum(1 for key in groups if not key)
     print(
-        f"Output rows: {len(rows)}, Unique function roots: {len(groups)}, "
-        f"Empty roots: {empty_keys}"
+        f"Output rows: {len(rows)}, Unique function keys used: {len(groups)}, "
+        f"Unmatched cells: {len(unmatched)}"
     )
+    if unmatched:
+        preview = ", ".join(unmatched[:10])
+        more = "" if len(unmatched) <= 10 else f", ... (+{len(unmatched) - 10})"
+        print(
+            f"Warning: unmatched cells keep post-filter names as keys: "
+            f"{preview}{more}",
+            file=sys.stderr,
+        )
 
     write_excel(args.output, rows)
     print(f"Done! Saved to {args.output}")

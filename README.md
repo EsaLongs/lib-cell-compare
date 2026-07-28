@@ -4,47 +4,61 @@
 
 ## 用法
 
-默认**无需** `--format-filter`：直接从完整 cell 名提取逻辑功能根作为 A 列归类 key（如 `XOR2D1COT` → `XOR2`，`ND2X4APBCOTC` → `ND2`，`FILL12VGCOT` → `FILL12`）。工艺/优化段（`COT` / `OPT` / `EEQ*` / `SK*` / `TWA` 等）以及驱动强度、版图后缀会在提取时剥掉；尺寸数字保留。
+A 列由有序 **`--function-keys`** 决定：按给定顺序做前缀匹配，**先命中者生效**，已匹配的名字不再被后面的 key 改写。
+
+规则要点：
+- **先命中生效**：已匹配项不再被后续 key 改写
+- 匹配后若下一位是数字则不算命中（`OAI22` 不会误吃 `OAI221` / `OAI2211` / `OAI2222`；`FILL1` 不会误吃 `FILL12`）
+- 对非数字续接的更长形态，仍需把长的写在前面：`--function-keys OAI22OAI21 OAI22`、`XOR2AOI22 XOR2`
+- 若只写 `XOR2`、不写 `XOR2AOI22`，则 `XOR2AOI22…` 会归到 `XOR2`（便于主动简化）
 
 ```bash
 python3 compare_cells.py \
+  --function-keys OAI2211 OAI22 AIOI21 AN2 AN3 AN4 \
   --np-file preview/NP1PP.list \
   --c1-file preview/C1Y.list \
   --output preview/NP1PP_vs_C1Y_preview.xlsx
 ```
 
-### 可选删除（`--format-filter`）
-
-在功能根提取**之前**执行；每个 token 用双引号包起来，空格分隔，按从左到右顺序剔除：
-
-```bash
-python3 compare_cells.py --format-filter '"FOO" "BAR"'
-```
-
-### 可选替换（`--format-replace`）
-
-在删除之后、功能根提取之前执行；格式为 `"原字符串 : 新字符串"`（英文冒号 `:`）：
+长列表可放文件（一行一个 key，`#` 开头为注释）：
 
 ```bash
 python3 compare_cells.py \
+  --function-keys-file preview/function_keys.txt \
+  --np-file preview/NP1PP.list \
+  --c1-file preview/C1Y.list \
+  --output preview/NP1PP_vs_C1Y_preview.xlsx
+```
+
+CLI 与文件可同时给：先匹配 `--function-keys`，再匹配文件中的 key。
+
+### 生成建议 key 列表
+
+```bash
+python3 compare_cells.py \
+  --np-file preview/NP1PP.list \
+  --c1-file preview/C1Y.list \
+  --dump-suggested-keys preview/function_keys.txt
+```
+
+按「长 key 优先」写出建议列表（可再手工删减/调整顺序）。尺寸类（`FILL12`、`DCAP10`）保留数字；复合门默认与基础门分开列出。
+
+### 可选删除 / 替换
+
+在前缀匹配前执行（一般不必再用）：
+
+```bash
+python3 compare_cells.py \
+  --function-keys-file preview/function_keys.txt \
+  --format-filter '"FOO"' \
   --format-replace '"X(\d{1,2}) : D\1"'
-```
-
-原/新两侧都支持正则；分隔符必须是英文 `:`（两侧可有空格）。
-
-可选路径参数：
-
-```bash
-python3 compare_cells.py \
-  --np-file /path/to/NP1PP.list \
-  --c1-file /path/to/C1Y.list \
-  --output /path/to/out.xlsx
 ```
 
 ## Preview
 
 ```bash
 python3 compare_cells.py \
+  --function-keys-file preview/function_keys.txt \
   --np-file preview/NP1PP.list \
   --c1-file preview/C1Y.list \
   --output preview/NP1PP_vs_C1Y_preview.xlsx
@@ -59,8 +73,7 @@ pip install -r requirements.txt
 ## 说明
 
 - 读取两个 list 文件，跳过空行与 `rg:` 开头行
-- A 列 = 从完整原名提取的功能根（可选先 filter / replace）
-- 复合单元与基础门分开（如 `XOR2` ≠ `XOR2AOI22`；`XOR2` ≠ `XOR3`）
-- 写出三列 Excel：`function_root | NP1PP | C1Y`；A 列按 key 合并
-- 组内仅全名完全相同才左右同行；NP-only / C1-only 各占一行，不再按序号硬配
+- A 列 = 有序 function key 的首次合格前缀命中；未命中则保留匹配前字符串并告警
+- 写出三列 Excel：`function_key | NP1PP | C1Y`；A 列按 key 合并
+- 组内仅全名完全相同才左右同行；NP-only / C1-only 各占一行
 - Excel：字号 16、首行/首列加粗、B=C 非空浅绿、首行冻结（首行无下边框）、分组上下边框横跨 A–C
