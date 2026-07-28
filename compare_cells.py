@@ -146,7 +146,7 @@ PROTECTED_ROOT_RE = re.compile(
 # Non-digit-prefixed variants peeled after drive strength.
 VARIANT_SUFFIX_RE = re.compile(
     r"(?:CCB|CCM|CCA|SNK|SRC|CW|CWBAL|CWRB|BALRB|BAL|DBA4|NOBCM|"
-    r"TGAR|XNRAR|ARSP|VPPVBB|IW|V2)$"
+    r"TGAR|XNRAR|ARSP|VPPVBB|IW|V2|COM)$"
 )
 # "HD" layout marker; keep short roots like BHD (stem shorter than 4).
 HD_SUFFIX_MIN_STEM = 4
