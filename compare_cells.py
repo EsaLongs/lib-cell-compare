@@ -3,14 +3,14 @@
 
 Usage:
     python3 compare_cells.py \\
-        --format-filter 'COT.*""EEQMBD""EEQMBC""OPT""A.{2}$'
+        --format-filter '"COT.*" "EEQMBD" "EEQMBC" "OPT" "A.{2}$"'
 
 Reads NP1PP.list and C1Y.list, strips regex filters from each full cell
 name in left-to-right order, re-groups by the resulting display key, and
 writes Excel.
 
---format-filter takes one string; tokens are separated by \"\" and each
-token is applied as a regex via re.sub, in the given order.
+--format-filter takes one string of quote-delimited tokens (shell-style).
+Each token is applied as a regex via re.sub, in the given order.
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import shlex
 import sys
 from collections import defaultdict
 from typing import Dict, List, Optional, Pattern, Sequence, Set, Tuple
@@ -31,7 +32,6 @@ NP_FILE = "/mnt/c/Users/t00961128/Downloads/NP1PP.list"
 C1_FILE = "/mnt/c/Users/t00961128/Downloads/C1Y.list"
 OUTPUT = "/mnt/c/Users/t00961128/Downloads/NP1PP_vs_C1Y.xlsx"
 
-TOKEN_SEPARATOR = '""'
 SHEET_TITLE = "Cell Comparison"
 COL_WIDTHS = {"A": 40, "B": 55, "C": 55}
 
@@ -54,8 +54,8 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         metavar="TOKENS",
         dest="format_filter",
         help=(
-            'Regex tokens separated by "", applied left-to-right, '
-            'e.g. COT.*""EEQMBD""EEQMBC""OPT""A.{2}$.'
+            "Quote-delimited regex tokens, applied left-to-right, "
+            "e.g. '\"COT.*\" \"EEQMBD\" \"EEQMBC\" \"OPT\" \"A.{2}$\"'."
         ),
     )
     parser.add_argument(
@@ -77,8 +77,13 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
 
 
 def split_format_filter(raw: str) -> List[str]:
-    """Split --format-filter value on \"\" into non-empty regex tokens."""
-    return [token for token in raw.split(TOKEN_SEPARATOR) if token]
+    """Split --format-filter into quote-delimited regex tokens via shlex."""
+    try:
+        tokens = shlex.split(raw, posix=True)
+    except ValueError as exc:
+        print(f"Invalid --format-filter quoting: {exc}", file=sys.stderr)
+        sys.exit(2)
+    return [token for token in tokens if token]
 
 
 # #### I/O
@@ -262,7 +267,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parse_args(argv)
     patterns = split_format_filter(args.format_filter)
     if not patterns:
-        print("Error: --format-filter has no tokens after splitting on \"\".")
+        print("Error: --format-filter has no tokens after quote parsing.")
         return 2
 
     regex_filters = compile_regex_filters(patterns)
