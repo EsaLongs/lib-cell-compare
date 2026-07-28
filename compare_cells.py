@@ -265,21 +265,19 @@ def _partition_group(
 def build_rows(groups: Dict[str, List[GroupItem]]) -> List[CellRow]:
     """Build Excel data rows from grouped cells.
 
-    Exact matches occupy both NP and C1 columns on the same row.
-    Remaining NP-only / C1-only cells are paired by index.
+    Only identical full cell names share a row (both NP and C1 filled).
+    NP-only and C1-only cells each get their own row; they are never
+    zip-paired across libraries.
     """
     rows: List[CellRow] = []
     for key in sorted(groups.keys()):
         exact_matches, np_only, c1_only = _partition_group(groups[key])
-        max_len = max(len(exact_matches), len(np_only), len(c1_only), 0)
-        for index in range(max_len):
-            if index < len(exact_matches):
-                np_val: Optional[str] = exact_matches[index]
-                c1_val: Optional[str] = exact_matches[index]
-            else:
-                np_val = np_only[index] if index < len(np_only) else None
-                c1_val = c1_only[index] if index < len(c1_only) else None
-            rows.append((key, np_val, c1_val))
+        for cell in exact_matches:
+            rows.append((key, cell, cell))
+        for cell in np_only:
+            rows.append((key, cell, None))
+        for cell in c1_only:
+            rows.append((key, None, cell))
     return rows
 
 
