@@ -24,7 +24,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Pattern, Sequence, Set, Tuple
 
 import openpyxl
-from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.worksheet.worksheet import Worksheet
 
 # #### Constants
@@ -39,6 +39,10 @@ MATCH_FILL = PatternFill(fill_type="solid", fgColor="C6EFCE")
 NORMAL_FONT = Font(size=FONT_SIZE)
 BOLD_FONT = Font(size=FONT_SIZE, bold=True)
 KEY_ALIGNMENT = Alignment(horizontal="center", vertical="center", wrap_text=True)
+BORDER_SIDE = Side(style="thin", color="000000")
+TOP_BOTTOM_BORDER = Border(top=BORDER_SIDE, bottom=BORDER_SIDE)
+TOP_BORDER = Border(top=BORDER_SIDE)
+BOTTOM_BORDER = Border(bottom=BORDER_SIDE)
 
 CellRow = Tuple[str, Optional[str], Optional[str]]
 GroupItem = Tuple[str, bool, bool]
@@ -199,39 +203,66 @@ def build_rows(groups: Dict[str, List[GroupItem]]) -> List[CellRow]:
 
 
 # #### Excel writing
+def _iter_display_key_groups(rows: Sequence[CellRow]) -> List[Tuple[int, int]]:
+    """Return inclusive Excel row ranges for each contiguous display-key group."""
+    if not rows:
+        return []
+
+    groups: List[Tuple[int, int]] = []
+    group_start = 2
+    current_key = rows[0][0]
+    for index in range(1, len(rows)):
+        if rows[index][0] != current_key:
+            groups.append((group_start, index + 1))
+            group_start = index + 2
+            current_key = rows[index][0]
+    groups.append((group_start, len(rows) + 1))
+    return groups
+
+
 def _merge_display_key_column(worksheet: Worksheet, rows: Sequence[CellRow]) -> None:
     """Merge contiguous identical display-key cells in column A."""
-    if not rows:
-        return
-
-    current_val = rows[0][0]
-    merge_start = 2
-    for index in range(1, len(rows)):
-        value = rows[index][0]
-        row_num = index + 2
-        if value != current_val:
-            if row_num - merge_start > 1:
-                worksheet.merge_cells(
-                    start_row=merge_start,
-                    start_column=1,
-                    end_row=row_num - 1,
-                    end_column=1,
-                )
-            merge_start = row_num
-            current_val = value
-
-    last_data_row = len(rows) + 1
-    if last_data_row - merge_start + 1 > 1:
-        worksheet.merge_cells(
-            start_row=merge_start,
-            start_column=1,
-            end_row=last_data_row,
-            end_column=1,
-        )
+    for start_row, end_row in _iter_display_key_groups(rows):
+        if end_row > start_row:
+            worksheet.merge_cells(
+                start_row=start_row,
+                start_column=1,
+                end_row=end_row,
+                end_column=1,
+            )
 
 
-def _format_worksheet(worksheet: Worksheet, row_count: int) -> None:
-    """Apply fonts, fills, widths, key alignment, and freeze header row."""
+def _apply_row_border(
+    worksheet: Worksheet,
+    row_index: int,
+    border: Border,
+) -> None:
+    """Apply a border style across columns A-C on one row."""
+    for column in range(1, 4):
+        worksheet.cell(row=row_index, column=column).border = border  # noqa
+
+
+def _apply_section_borders(worksheet: Worksheet, rows: Sequence[CellRow]) -> None:
+    """Add top/bottom borders for the header and each display-key group.
+
+    Borders span columns A-C so each key block reads as a full-width section.
+    """
+    _apply_row_border(worksheet, 1, TOP_BOTTOM_BORDER)
+
+    for start_row, end_row in _iter_display_key_groups(rows):
+        if start_row == end_row:
+            _apply_row_border(worksheet, start_row, TOP_BOTTOM_BORDER)
+            continue
+        _apply_row_border(worksheet, start_row, TOP_BORDER)
+        _apply_row_border(worksheet, end_row, BOTTOM_BORDER)
+
+
+def _format_worksheet(
+    worksheet: Worksheet,
+    rows: Sequence[CellRow],
+) -> None:
+    """Apply fonts, fills, widths, key alignment, freeze, and borders."""
+    row_count = len(rows)
     for column, width in COL_WIDTHS.items():
         worksheet.column_dimensions[column].width = width
 
@@ -256,6 +287,8 @@ def _format_worksheet(worksheet: Worksheet, row_count: int) -> None:
             np_cell.fill = MATCH_FILL  # noqa
             c1_cell.fill = MATCH_FILL  # noqa
 
+    _apply_section_borders(worksheet, rows)
+
 
 def write_excel(output_path: str, rows: Sequence[CellRow]) -> None:
     """Write comparison rows to an Excel workbook."""
@@ -279,7 +312,7 @@ def write_excel(output_path: str, rows: Sequence[CellRow]) -> None:
             worksheet.cell(row=row_index, column=3, value=c1_val)
 
     _merge_display_key_column(worksheet, rows)
-    _format_worksheet(worksheet, len(rows))
+    _format_worksheet(worksheet, rows)
     workbook.save(output_path)
 
 
