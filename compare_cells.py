@@ -322,11 +322,12 @@ def _apply_row_border(
 
 
 def _apply_section_borders(worksheet: Worksheet, rows: Sequence[CellRow]) -> None:
-    """Add top/bottom borders for the header and each display-key group.
+    """Add top/bottom borders for display-key groups; header keeps top only.
 
-    Borders span columns A-C so each key block reads as a full-width section.
+    Header row uses freeze panes instead of a bottom border. Group borders
+    span columns A-C so each key block reads as a full-width section.
     """
-    _apply_row_border(worksheet, 1, TOP_BOTTOM_BORDER)
+    _apply_row_border(worksheet, 1, TOP_BORDER)
 
     for start_row, end_row in _iter_display_key_groups(rows):
         if start_row == end_row:

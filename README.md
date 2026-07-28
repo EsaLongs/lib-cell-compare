@@ -59,4 +59,4 @@ pip install -r requirements.txt
 - 删除：每个正则反复剔除直到不再匹配；替换：每个规则按顺序 `re.sub` 一次
 - 写出三列 Excel：`display_key | NP1PP | C1Y`；A 列按 display key 合并
 - 组内仅全名完全相同才左右同行；NP-only / C1-only 各占一行，不再按序号硬配
-- Excel：字号 16、首行/首列加粗、B=C 非空浅绿、首行冻结、分组上下边框横跨 A–C
+- Excel：字号 16、首行/首列加粗、B=C 非空浅绿、首行冻结（首行无下边框）、分组上下边框横跨 A–C
