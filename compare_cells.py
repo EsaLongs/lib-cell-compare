@@ -3,14 +3,14 @@
 
 Usage:
     python3 compare_cells.py --format-filter TOKEN1 TOKEN2 ...
-
-Example:
-    python3 compare_cells.py --format-filter EEQMBD EEQMBC OPT
+    python3 compare_cells.py --format-filter EEQMBD EEQMBC OPT \\
+        --format-filter-regex 'A.{2}$'
 
 Reads NP1PP.list and C1Y.list, groups cells by base name (COT prefix),
-strips given tokens from the display key, re-groups, and writes Excel.
+strips given tokens / regexes from the display key, re-groups, and writes
+Excel.
 
-Tokens are removed via exact string replacement (no regex).
+Exact tokens use string replacement. Regex filters use re.sub.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ import os
 import re
 import sys
 from collections import defaultdict
-from typing import Dict, List, Optional, Sequence, Set, Tuple
+from typing import Dict, List, Optional, Pattern, Sequence, Set, Tuple
 
 import openpyxl
 from openpyxl.styles import Alignment
@@ -45,18 +45,29 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Compare NP1PP and C1Y cell lists after stripping tokens "
-            "from display keys."
+            "and/or regexes from display keys."
         ),
     )
     parser.add_argument(
         "--format-filter",
         nargs="+",
-        required=True,
+        default=[],
         metavar="TOKEN",
         dest="format_filter",
         help=(
             "Tokens to strip from display keys (exact string match), "
             "e.g. EEQMBD EEQMBC OPT."
+        ),
+    )
+    parser.add_argument(
+        "--format-filter-regex",
+        nargs="+",
+        default=[],
+        metavar="PATTERN",
+        dest="format_filter_regex",
+        help=(
+            "Regex patterns to strip from display keys via re.sub, "
+            "e.g. 'A.{2}$' for a trailing A?? suffix."
         ),
     )
     parser.add_argument(
@@ -97,17 +108,52 @@ def get_base(name: str) -> str:
     return match.group(1) if match else name
 
 
-def make_display_key(name: str, tokens: Sequence[str]) -> str:
-    """Build a display key by stripping tokens from the COT base prefix."""
-    base = get_base(name)
-    for token in tokens:
-        base = base.replace(token, "")
-    return base
-
-
 def sort_tokens(tokens: Sequence[str]) -> List[str]:
     """Sort tokens by length descending to avoid substring collisions."""
     return sorted(tokens, key=len, reverse=True)
+
+
+def compile_regex_filters(patterns: Sequence[str]) -> List[Pattern[str]]:
+    """Compile regex filter patterns, exiting on invalid syntax."""
+    compiled: List[Pattern[str]] = []
+    for pattern in patterns:
+        try:
+            compiled.append(re.compile(pattern))
+        except re.error as exc:
+            print(
+                f"Invalid regex in --format-filter-regex: {pattern!r}: {exc}",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+    return compiled
+
+
+def _apply_regex_filters(
+    value: str,
+    regex_filters: Sequence[Pattern[str]],
+) -> str:
+    """Apply each regex repeatedly until the value stabilizes."""
+    for pattern in regex_filters:
+        while True:
+            updated = pattern.sub("", value)
+            if updated == value:
+                break
+            value = updated
+    return value
+
+
+def make_display_key(
+    name: str,
+    tokens: Sequence[str],
+    regex_filters: Sequence[Pattern[str]] | None = None,
+) -> str:
+    """Build a display key by stripping exact tokens then regexes."""
+    base = get_base(name)
+    for token in tokens:
+        base = base.replace(token, "")
+    if regex_filters:
+        base = _apply_regex_filters(base, regex_filters)
+    return base
 
 
 # #### Grouping
@@ -116,11 +162,12 @@ def group_cells(
     np_set: Set[str],
     c1_set: Set[str],
     tokens: Sequence[str],
+    regex_filters: Sequence[Pattern[str]] | None = None,
 ) -> Dict[str, List[GroupItem]]:
     """Group cells by display key with NP/C1 membership flags."""
     groups: Dict[str, List[GroupItem]] = defaultdict(list)
     for cell in all_cells:
-        key = make_display_key(cell, tokens)
+        key = make_display_key(cell, tokens, regex_filters)
         groups[key].append((cell, cell in np_set, cell in c1_set))
     return groups
 
@@ -239,7 +286,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     """Run the cell comparison pipeline."""
     args = parse_args(argv)
     tokens = sort_tokens(args.format_filter)
+    regex_filters = compile_regex_filters(args.format_filter_regex)
     print(f"Tokens to strip: {tokens}")
+    print(f"Regex filters: {args.format_filter_regex}")
 
     np1_cells = read_list(args.np_file)
     c1y_cells = read_list(args.c1_file)
@@ -252,7 +301,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         f"Combined unique: {len(all_cells)}"
     )
 
-    groups = group_cells(all_cells, np_set, c1_set, tokens)
+    groups = group_cells(all_cells, np_set, c1_set, tokens, regex_filters)
     rows = build_rows(groups)
     print(f"Output rows: {len(rows)}, Unique display keys: {len(groups)}")
 
