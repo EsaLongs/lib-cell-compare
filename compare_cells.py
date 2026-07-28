@@ -231,9 +231,11 @@ def _merge_display_key_column(worksheet: Worksheet, rows: Sequence[CellRow]) -> 
 
 
 def _format_worksheet(worksheet: Worksheet, row_count: int) -> None:
-    """Apply fonts, fills, widths, and key-column alignment."""
+    """Apply fonts, fills, widths, key alignment, and freeze header row."""
     for column, width in COL_WIDTHS.items():
         worksheet.column_dimensions[column].width = width
+
+    worksheet.freeze_panes = "A2"  # noqa
 
     for column in range(1, 4):
         worksheet.cell(row=1, column=column).font = BOLD_FONT  # noqa
