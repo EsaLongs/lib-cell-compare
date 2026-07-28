@@ -2,15 +2,13 @@
 """Compare cell lists from two process libraries and write an Excel report.
 
 Usage:
-    python3 compare_cells.py --format-filter TOKEN1 TOKEN2 ...
-    python3 compare_cells.py --format-filter EEQMBD EEQMBC OPT \\
-        --format-filter-regex 'A.{2}$'
+    python3 compare_cells.py --format-filter 'EEQMBD""EEQMBC""OPT""A.{2}$'
 
 Reads NP1PP.list and C1Y.list, groups cells by base name (COT prefix),
-strips given tokens / regexes from the display key, re-groups, and writes
-Excel.
+strips regex filters from the display key, re-groups, and writes Excel.
 
-Exact tokens use string replacement. Regex filters use re.sub.
+--format-filter takes one string; tokens are separated by \"\" and each
+token is applied as a regex via re.sub.
 """
 
 from __future__ import annotations
@@ -32,6 +30,7 @@ C1_FILE = "/mnt/c/Users/t00961128/Downloads/C1Y.list"
 OUTPUT = "/mnt/c/Users/t00961128/Downloads/NP1PP_vs_C1Y.xlsx"
 
 COT_PREFIX_RE = re.compile(r"^(.*?)COT")
+TOKEN_SEPARATOR = '""'
 SHEET_TITLE = "Cell Comparison"
 COL_WIDTHS = {"A": 40, "B": 55, "C": 55}
 
@@ -44,30 +43,18 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description=(
-            "Compare NP1PP and C1Y cell lists after stripping tokens "
-            "and/or regexes from display keys."
+            "Compare NP1PP and C1Y cell lists after stripping regex "
+            "filters from display keys."
         ),
     )
     parser.add_argument(
         "--format-filter",
-        nargs="+",
-        default=[],
-        metavar="TOKEN",
+        required=True,
+        metavar="TOKENS",
         dest="format_filter",
         help=(
-            "Tokens to strip from display keys (exact string match), "
-            "e.g. EEQMBD EEQMBC OPT."
-        ),
-    )
-    parser.add_argument(
-        "--format-filter-regex",
-        nargs="+",
-        default=[],
-        metavar="PATTERN",
-        dest="format_filter_regex",
-        help=(
-            "Regex patterns to strip from display keys via re.sub, "
-            "e.g. 'A.{2}$' for a trailing A?? suffix."
+            'Regex tokens separated by "", '
+            "e.g. EEQMBD\"\"EEQMBC\"\"OPT\"\"A.{2}$."
         ),
     )
     parser.add_argument(
@@ -86,6 +73,11 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help=f"Output Excel path (default: {OUTPUT})",
     )
     return parser.parse_args(argv)
+
+
+def split_format_filter(raw: str) -> List[str]:
+    """Split --format-filter value on \"\" into non-empty regex tokens."""
+    return [token for token in raw.split(TOKEN_SEPARATOR) if token]
 
 
 # #### I/O
@@ -108,11 +100,6 @@ def get_base(name: str) -> str:
     return match.group(1) if match else name
 
 
-def sort_tokens(tokens: Sequence[str]) -> List[str]:
-    """Sort tokens by length descending to avoid substring collisions."""
-    return sorted(tokens, key=len, reverse=True)
-
-
 def compile_regex_filters(patterns: Sequence[str]) -> List[Pattern[str]]:
     """Compile regex filter patterns, exiting on invalid syntax."""
     compiled: List[Pattern[str]] = []
@@ -121,14 +108,14 @@ def compile_regex_filters(patterns: Sequence[str]) -> List[Pattern[str]]:
             compiled.append(re.compile(pattern))
         except re.error as exc:
             print(
-                f"Invalid regex in --format-filter-regex: {pattern!r}: {exc}",
+                f"Invalid regex in --format-filter: {pattern!r}: {exc}",
                 file=sys.stderr,
             )
             sys.exit(2)
     return compiled
 
 
-def _apply_regex_filters(
+def apply_regex_filters(
     value: str,
     regex_filters: Sequence[Pattern[str]],
 ) -> str:
@@ -144,16 +131,11 @@ def _apply_regex_filters(
 
 def make_display_key(
     name: str,
-    tokens: Sequence[str],
-    regex_filters: Sequence[Pattern[str]] | None = None,
+    regex_filters: Sequence[Pattern[str]],
 ) -> str:
-    """Build a display key by stripping exact tokens then regexes."""
+    """Build a display key by stripping regex filters from the COT base."""
     base = get_base(name)
-    for token in tokens:
-        base = base.replace(token, "")
-    if regex_filters:
-        base = _apply_regex_filters(base, regex_filters)
-    return base
+    return apply_regex_filters(base, regex_filters)
 
 
 # #### Grouping
@@ -161,13 +143,12 @@ def group_cells(
     all_cells: Sequence[str],
     np_set: Set[str],
     c1_set: Set[str],
-    tokens: Sequence[str],
-    regex_filters: Sequence[Pattern[str]] | None = None,
+    regex_filters: Sequence[Pattern[str]],
 ) -> Dict[str, List[GroupItem]]:
     """Group cells by display key with NP/C1 membership flags."""
     groups: Dict[str, List[GroupItem]] = defaultdict(list)
     for cell in all_cells:
-        key = make_display_key(cell, tokens, regex_filters)
+        key = make_display_key(cell, regex_filters)
         groups[key].append((cell, cell in np_set, cell in c1_set))
     return groups
 
@@ -285,10 +266,13 @@ def write_excel(output_path: str, rows: Sequence[CellRow]) -> None:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     """Run the cell comparison pipeline."""
     args = parse_args(argv)
-    tokens = sort_tokens(args.format_filter)
-    regex_filters = compile_regex_filters(args.format_filter_regex)
-    print(f"Tokens to strip: {tokens}")
-    print(f"Regex filters: {args.format_filter_regex}")
+    patterns = split_format_filter(args.format_filter)
+    if not patterns:
+        print("Error: --format-filter has no tokens after splitting on \"\".")
+        return 2
+
+    regex_filters = compile_regex_filters(patterns)
+    print(f"Regex filters: {patterns}")
 
     np1_cells = read_list(args.np_file)
     c1y_cells = read_list(args.c1_file)
@@ -301,7 +285,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         f"Combined unique: {len(all_cells)}"
     )
 
-    groups = group_cells(all_cells, np_set, c1_set, tokens, regex_filters)
+    groups = group_cells(all_cells, np_set, c1_set, regex_filters)
     rows = build_rows(groups)
     print(f"Output rows: {len(rows)}, Unique display keys: {len(groups)}")
 
