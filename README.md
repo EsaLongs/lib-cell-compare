@@ -32,6 +32,28 @@ python3 compare_cells.py \
 
 CLI 与文件可同时给：先匹配 `--function-keys`，再匹配文件中的 key。
 
+### 中文映射（可编辑）
+
+A 列中文来自 **`function_key_zh.txt` 一对一表**（第一列英文 KEY，第二列中文，TAB 分隔）。改第二列即可改 Excel 显示，无需改代码。
+
+```text
+# key	chinese
+BUF	缓冲器
+INV	反相器
+AOI21	与或非门
+```
+
+```bash
+python3 compare_cells.py \
+  --function-keys-file preview/function_keys.txt \
+  --function-key-zh-file preview/function_key_zh.txt \
+  --np-file preview/NP1PP.list \
+  --c1-file preview/C1Y.list \
+  --output preview/NP1PP_vs_C1Y_preview.xlsx
+```
+
+若只传 `--function-keys-file`，且同目录存在对应的 `function_key_zh.txt`（例如 `preview/function_keys.txt` → `preview/function_key_zh.txt`），会自动加载。表中没有的 KEY 回退到内置中文规则。
+
 ### 生成建议 key 列表
 
 ```bash
@@ -41,7 +63,10 @@ python3 compare_cells.py \
   --dump-suggested-keys preview/function_keys.txt
 ```
 
-按「长 key 优先」写出建议列表（可再手工删减/调整顺序）。尺寸类（`FILL12`、`DCAP10`）保留数字；复合门默认与基础门分开列出。
+会同时写出：
+
+- `preview/function_keys.txt`（长 key 优先）
+- `preview/function_key_zh.txt`（初始中文来自内置规则，可改第二列）
 
 ### 可选删除 / 替换
 
@@ -59,6 +84,7 @@ python3 compare_cells.py \
 ```bash
 python3 compare_cells.py \
   --function-keys-file preview/function_keys.txt \
+  --function-key-zh-file preview/function_key_zh.txt \
   --np-file preview/NP1PP.list \
   --c1-file preview/C1Y.list \
   --output preview/NP1PP_vs_C1Y_preview.xlsx
@@ -73,7 +99,7 @@ pip install -r requirements.txt
 ## 说明
 
 - 读取两个 list 文件，跳过空行与 `rg:` 开头行
-- A 列 = 有序 function key 的首次合格前缀命中，合并单元格内附中文简述（如 `AN2` + 与门）；未命中则保留匹配前字符串并告警
+- A 列 = 有序 function key 的首次合格前缀命中 + 中文（优先读 `function_key_zh.txt`）；未命中则保留匹配前字符串并告警
 - 写出三列 Excel：`function_key | NP1PP | C1Y`；A 列按 key 合并
 - 组内仅全名完全相同才左右同行；NP-only / C1-only 各占一行
 - Excel：字号 16、首行/首列加粗、B=C 非空浅绿、首行冻结（首行无下边框）、分组上下边框横跨 A–C

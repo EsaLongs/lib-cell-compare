@@ -227,13 +227,25 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--function-key-zh-file",
+        default="",
+        metavar="PATH",
+        dest="function_key_zh_file",
+        help=(
+            "Optional TSV map of KEY<TAB>中文 for column-A labels "
+            "(e.g. preview/function_key_zh.txt). Editable; missing keys "
+            "fall back to built-in describe_function_key()."
+        ),
+    )
+    parser.add_argument(
         "--dump-suggested-keys",
         default="",
         metavar="PATH",
         dest="dump_suggested_keys",
         help=(
             "Write a longest-first suggested key list from the input cell "
-            "names to PATH, then exit (no Excel)."
+            "names to PATH, also write PATH with suffix replaced by "
+            "_zh.txt (or .zh.txt companion) for KEY\\t中文, then exit."
         ),
     )
     parser.add_argument(
@@ -341,6 +353,34 @@ def load_function_keys_file(filepath: str) -> List[str]:
     return keys
 
 
+def load_function_key_zh_file(filepath: str) -> Dict[str, str]:
+    """Load KEY -> Chinese map from a TSV file (key<TAB>chinese)."""
+    mapping: Dict[str, str] = {}
+    with open(filepath, encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if "\t" not in stripped:
+                print(
+                    f"Invalid zh map in {filepath}:{line_number}: {stripped!r} "
+                    "(expected KEY<TAB>中文)",
+                    file=sys.stderr,
+                )
+                sys.exit(2)
+            key, chinese = stripped.split("\t", 1)
+            key = key.strip()
+            chinese = chinese.strip()
+            if not key:
+                print(
+                    f"Invalid zh map in {filepath}:{line_number}: empty key",
+                    file=sys.stderr,
+                )
+                sys.exit(2)
+            mapping[key] = chinese
+    return mapping
+
+
 def resolve_function_keys(
     cli_keys: Sequence[str],
     keys_file: str,
@@ -357,6 +397,19 @@ def resolve_function_keys(
         )
         sys.exit(2)
     return keys
+
+
+def zh_path_for_keys_file(keys_path: str) -> str:
+    """Derive function_key_zh.txt path beside a function_keys.txt path."""
+    directory, filename = os.path.split(keys_path)
+    stem, ext = os.path.splitext(filename)
+    if stem.endswith("_keys"):
+        zh_name = stem[: -len("_keys")] + "_key_zh" + (ext or ".txt")
+    elif stem == "function_keys":
+        zh_name = "function_key_zh" + (ext or ".txt")
+    else:
+        zh_name = stem + "_zh" + (ext or ".txt")
+    return os.path.join(directory, zh_name) if directory else zh_name
 
 
 # #### I/O
@@ -770,9 +823,16 @@ def describe_function_key(  # pylint: disable=too-many-return-statements,too-man
     return ""
 
 
-def format_column_a_label(function_key: str) -> str:
+def format_column_a_label(
+    function_key: str,
+    zh_map: Dict[str, str] | None = None,
+) -> str:
     """Build merged-cell text: function key plus Chinese brief."""
-    chinese = describe_function_key(function_key)
+    chinese = ""
+    if zh_map and function_key in zh_map:
+        chinese = zh_map[function_key]
+    if not chinese:
+        chinese = describe_function_key(function_key)
     if chinese:
         return f"{function_key}\n{chinese}"
     return function_key
@@ -826,8 +886,8 @@ def group_cells(  # pylint: disable=too-many-arguments,too-many-positional-argum
 def dump_suggested_keys(
     cells: Sequence[str],
     output_path: str,
-) -> List[str]:
-    """Write longest-first suggested keys derived from cell names."""
+) -> Tuple[List[str], str]:
+    """Write longest-first keys and a KEY\\t中文 companion map."""
     roots = {extract_function_root(cell) for cell in cells}
     keys = sorted(root for root in roots if root)
     keys.sort(key=lambda item: (-len(item), item))
@@ -836,7 +896,14 @@ def dump_suggested_keys(
         handle.write(f"# cells={len(cells)} keys={len(keys)}\n")
         for key in keys:
             handle.write(f"{key}\n")
-    return keys
+
+    zh_path = zh_path_for_keys_file(output_path)
+    with open(zh_path, "w", encoding="utf-8") as handle:
+        handle.write("# key\tchinese\n")
+        handle.write("# Edit the Chinese column; used by --function-key-zh-file\n")
+        for key in keys:
+            handle.write(f"{key}\t{describe_function_key(key)}\n")
+    return keys, zh_path
 
 
 def _partition_group(
@@ -859,7 +926,10 @@ def _partition_group(
     return exact_matches, np_only, c1_only
 
 
-def build_rows(groups: Dict[str, List[GroupItem]]) -> List[CellRow]:
+def build_rows(
+    groups: Dict[str, List[GroupItem]],
+    zh_map: Dict[str, str] | None = None,
+) -> List[CellRow]:
     """Build Excel data rows from grouped cells.
 
     Only identical full cell names share a row (both NP and C1 filled).
@@ -869,7 +939,7 @@ def build_rows(groups: Dict[str, List[GroupItem]]) -> List[CellRow]:
     """
     rows: List[CellRow] = []
     for key in sorted(groups.keys()):
-        display = format_column_a_label(key)
+        display = format_column_a_label(key, zh_map)
         exact_matches, np_only, c1_only = _partition_group(groups[key])
         for cell in exact_matches:
             rows.append((display, cell, cell))
@@ -1011,21 +1081,32 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # pylint: disable=too-ma
     )
 
     if args.dump_suggested_keys:
-        keys = dump_suggested_keys(all_cells, args.dump_suggested_keys)
+        keys, zh_path = dump_suggested_keys(all_cells, args.dump_suggested_keys)
         print(
             f"Wrote {len(keys)} suggested keys to {args.dump_suggested_keys}"
         )
+        print(f"Wrote KEY\\t中文 map to {zh_path}")
         return 0
 
     function_keys = resolve_function_keys(
         args.function_keys,
         args.function_keys_file,
     )
+    zh_map: Dict[str, str] = {}
+    zh_file = args.function_key_zh_file
+    if not zh_file and args.function_keys_file:
+        candidate = zh_path_for_keys_file(args.function_keys_file)
+        if os.path.isfile(candidate):
+            zh_file = candidate
+    if zh_file:
+        zh_map = load_function_key_zh_file(zh_file)
+        print(f"Chinese map file: {zh_file}")
     patterns = split_format_filter(args.format_filter)
     replace_mappings = parse_format_replace(args.format_replace)
     regex_filters = compile_regex_filters(patterns)
     regex_replaces = compile_regex_replaces(replace_mappings)
     print(f"Function keys: {len(function_keys)}")
+    print(f"Chinese map entries: {len(zh_map) if zh_map else '(builtin fallback)'}")
     print(f"Regex filters (ordered): {patterns or '(none)'}")
     print(f"Regex replaces (ordered): {replace_mappings or '(none)'}")
 
@@ -1037,7 +1118,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # pylint: disable=too-ma
         regex_filters,
         regex_replaces,
     )
-    rows = build_rows(groups)
+    rows = build_rows(groups, zh_map or None)
     print(
         f"Output rows: {len(rows)}, Unique function keys used: {len(groups)}, "
         f"Unmatched cells: {len(unmatched)}"
