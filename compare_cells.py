@@ -526,10 +526,12 @@ def describe_function_key(  # pylint: disable=too-many-return-statements,too-man
             return "时钟异或门"
         if re.search(r"OR\d", key):
             return "时钟或门"
-        if key in ("CKB", "DCCKB") or key.endswith("CKB"):
+        if key in ("CKB", "DCCKB", "CKN") or key.endswith("CKB"):
             return "时钟缓冲/反相"
         if any(token in key for token in ("LNQ", "LHQ", "LNCNQ", "LHCNQ")):
             return "时钟锁存器"
+        if key.startswith("GCK"):
+            return "门控时钟"
         return "时钟单元"
     if key.startswith("MB") or key.startswith("MCE"):
         if "LH" in key or "LN" in key or "CNQ" in key:
@@ -583,7 +585,7 @@ def describe_function_key(  # pylint: disable=too-many-return-statements,too-man
     if key.startswith(("HA", "HAC")):
         return "半加器"
     if key.startswith("CMPE"):
-        return "比较器"
+        return "压缩器"
     if key.startswith(("FC", "FI", "FCON")):
         return "进位逻辑"
     if key.startswith("BENC"):
@@ -591,7 +593,11 @@ def describe_function_key(  # pylint: disable=too-many-return-statements,too-man
     if "MUX" in key or key.startswith(("MXI", "MX", "GMUX")):
         if any(token in key for token in ("ND", "NR", "AOI", "NND", "NNR")):
             return "复合多路选择器"
-        if key.startswith("MXI") or re.search(r"MUX\d+I", key):
+        if (
+            key.startswith("MXI")
+            or re.search(r"MUX\d+I", key)
+            or re.search(r"MUX\d+N$", key)
+        ):
             return "反相多路选择器"
         return "多路选择器"
     if key.startswith(

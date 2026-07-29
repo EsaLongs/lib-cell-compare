@@ -196,8 +196,8 @@ APTIEL	电平钳位
 CKMUX2	时钟多路选择器
 CKND24	时钟与非门
 CKXOR2	时钟异或门
-CMPE32	比较器
-CMPE42	比较器
+CMPE32	压缩器
+CMPE42	压缩器
 DCAP10	去耦电容
 DCAP16	去耦电容
 DCAP20	去耦电容
@@ -307,7 +307,7 @@ GAO22	与或门
 GAO31	与或门
 GAO32	与或门
 GBUFF	缓冲器
-GCKNQ	时钟单元
+GCKNQ	门控时钟
 GIND4	与非门
 GLAHQ	锁存器
 GMUX2	多路选择器
@@ -333,7 +333,7 @@ LHSNQ	锁存器
 LNCNQ	锁存器
 LNSNQ	锁存器
 MUX2I	反相多路选择器
-MUX4N	多路选择器
+MUX4N	反相多路选择器
 ND2N1	与非门
 ND3N1	与非门
 ND3N2	与非门
@@ -413,7 +413,7 @@ AN4	与门
 BHD	总线保持器
 BUF	缓冲器
 CKB	时钟缓冲/反相
-CKN	时钟单元
+CKN	时钟缓冲/反相
 DFQ	D触发器
 FA1	全加器
 HA1	半加器
