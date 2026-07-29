@@ -329,6 +329,18 @@ def _should_stop_drive_peel(name: str) -> bool:
     return False
 
 
+def _normalize_fill_dcap_size(name: str) -> str:
+    """Map GFILLD12 / GDCAPD10 / GFILLD2D → GFILL12 / GDCAP10 / GFILL2.
+
+    C1Y sizes the cell as D<n> after FILL/DCAP; NP1PP uses FILL<n> directly.
+    Optional trailing D (e.g. GFILLD2D) is a density variant, not a new function.
+    """
+    match = re.fullmatch(r"((?:G)?(?:FILL|DCAP))D(\d+)D?", name)
+    if match is None:
+        return name
+    return f"{match.group(1)}{match.group(2)}"
+
+
 def _normalize_layout_family(name: str) -> str:
     """Collapse sized layout cells to their family prefix key."""
     for prefix in LAYOUT_FAMILY_PREFIXES:
@@ -347,6 +359,8 @@ def _normalize_function_aliases(name: str) -> str:
         name = name[:-4]
     if name == "BUFF":
         name = "BUF"
+    if name == "GBUF":
+        name = "GBUFF"
     # Cross-library spelling aliases (C1Y full / NP1PP short).
     if name.startswith("GNAND"):
         name = "GND" + name[5:]
@@ -354,6 +368,8 @@ def _normalize_function_aliases(name: str) -> str:
         name = "GAN" + name[4:]
     if name.startswith("GNOR"):
         name = "GNR" + name[4:]
+    if name.startswith("GXNOR"):
+        name = "GXNR" + name[5:]
     return name
 
 
@@ -382,6 +398,8 @@ def extract_function_root(name: str) -> str:
     """Extract a logic-function root from a full cell name."""
     value = COT_AND_AFTER_RE.sub("", name)
     value = _cut_process_tail(value)
+    # C1Y FILL/DCAP sizes use D<n>; normalize before drive peel.
+    value = _normalize_fill_dcap_size(value)
     while True:
         value = _peel_trailing_tags(value)
         value = _peel_variant_suffixes(value)

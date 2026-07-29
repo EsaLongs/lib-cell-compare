@@ -19,7 +19,9 @@ INVBAOI21	复合逻辑门
 INVBOAI21	复合逻辑门
 MB2SRLSDF	多比特触发器
 MB4SRLSDF	多比特触发器
+MCESNQSYN	多比特同步器
 OAI211INV	复合逻辑门
+WAO21OA21	复合逻辑门
 WAO22OA22	复合逻辑门
 XNR2AOI21	复合逻辑门
 XNR2AOI22	复合逻辑门
@@ -50,6 +52,7 @@ OAI22ND2	复合逻辑门
 OAI22NR2	复合逻辑门
 SDFSYNC1	同步触发器
 SYNLHCNQ	同步器
+SYNLHRPQ	同步器
 SYNLHSNQ	同步器
 XNR2XNR2	复合逻辑门
 XNR2XOR2	复合逻辑门
@@ -65,9 +68,13 @@ BENCGRF	编码器
 CKLNCNQ	时钟锁存器
 CKLVLLH	电平转换器
 FCSICON	进位逻辑
+GAOI211	与或非门
+GDCAP10	去耦电容
 GDCAP12	去耦电容
+GFILL10	填充单元
 GFILL11	填充单元
 GFILL12	填充单元
+GLAHRNQ	锁存器
 GOAI211	或与非门
 HDDICWY	边界/版图单元
 MAOI222	复合逻辑门
@@ -80,6 +87,8 @@ OAI2221	或与非门
 OAI2222	或与非门
 OAOI211	复合逻辑门
 TAPCELL	阱敲击单元
+W2AOI22	复合逻辑门
+WAN2OR2	复合逻辑门
 XNR2ND2	复合逻辑门
 XNR2NR2	复合逻辑门
 XOR2ND2	复合逻辑门
@@ -111,6 +120,8 @@ FILL32	填充单元
 FILL64	填充单元
 GAOI21	与或非门
 GAOI22	与或非门
+GAOI31	与或非门
+GAOI32	与或非门
 GAOI33	与或非门
 GCKLNQ	时钟锁存器
 GDCAP2	去耦电容
@@ -131,8 +142,11 @@ GLNCNQ	锁存器
 GMUX2N	反相多路选择器
 GOAI21	或与非门
 GOAI22	或与非门
+GOAI31	或与非门
+GOAI32	或与非门
 GOAI33	或与非门
 GPULL0	上拉/下拉
+GPULL1	上拉/下拉
 IAOI21	复合逻辑门
 INVPAD	焊盘反相器
 IOAI21	复合逻辑门
@@ -146,6 +160,7 @@ MB2LNQ	多比特锁存器
 MB4LHQ	多比特锁存器
 MB4LNQ	多比特锁存器
 MCECNQ	多比特锁存器
+MCESNQ	多比特锁存器
 MOAI22	复合逻辑门
 NR2ND2	复合逻辑门
 OA2222	或与门
@@ -194,11 +209,15 @@ GAO31	与或门
 GAO32	与或门
 GBUFF	缓冲器
 GCKNQ	门控时钟
+GIND1	与非门
+GIND2	与非门
 GIND4	与非门
+GIND8	与非门
 GLAHQ	锁存器
 GMUX2	多路选择器
 GOA21	或与门
 GOA22	或与门
+GOA31	或与门
 GOA32	或与门
 GTIEH	电平钳位
 GTIEL	电平钳位
@@ -236,6 +255,7 @@ Y3SDF	扫描触发器
 AO21	与或门
 AO22	与或门
 AO33	与或门
+BENC	编码器
 BUFT	三态缓冲器
 DELA	延时单元
 DELB	延时单元
@@ -254,6 +274,7 @@ GLHQ	锁存器
 GLNQ	锁存器
 GND2	与非门
 GND3	与非门
+GND4	与非门
 GNR2	或非门
 GNR3	或非门
 GNR4	或非门
@@ -262,6 +283,7 @@ GOR3	或门
 GOR4	或门
 GSDF	扫描触发器
 HAC1	半加器
+HAN1	半加器
 IND2	与非门
 IND3	与非门
 IND4	与非门
@@ -293,6 +315,7 @@ AN2	与门
 AN3	与门
 AN4	与门
 BHD	总线保持器
+BML	辅助单元
 BUF	缓冲器
 CKB	时钟缓冲/反相
 CKN	时钟缓冲/反相
@@ -303,6 +326,7 @@ HA1	半加器
 INV	反相器
 LHQ	锁存器
 LNQ	锁存器
+LVU	电平转换器
 MX2	多路选择器
 ND2	与非门
 ND3	与非门
