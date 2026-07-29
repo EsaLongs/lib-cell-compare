@@ -136,8 +136,8 @@ TRAILING_TAG_RE = re.compile(
     + r")$"
 )
 DRIVE_RE = re.compile(r"[DX]\d+(?:P\d+)?$")
-# Compound / naming roots that still end with D\d+ or X\d+ (must not peel).
-PROTECTED_ROOT_RE = re.compile(
+# Whole-name roots that still end with D\d+/X\d+ and must not peel.
+PROTECTED_WHOLE_RE = re.compile(
     r"(?:"
     r"(?:CK|G)?(?:ND|NR|IND|INR|IIND|IINR|GND|GNR|GNAND|GNOR)\d+|"
     r"(?:G)?AND\d+|"
@@ -145,10 +145,15 @@ PROTECTED_ROOT_RE = re.compile(
     r"MX\d+"
     r")$"
 )
+# Real compound *ND2+/*NR2+ (not ND1 drive stuck on FA1N/FCISN/...).
+COMPOUND_ND_NR_RE = re.compile(
+    r"(?:AOI|OAI|XOR|XNR|MUX|AN|OR|AO|OA|ND|NR|INR|IND)\d+"
+    r"(?:ND|NR)(?:[2-9]\d*)$"
+)
 # Non-digit-prefixed variants peeled after drive strength.
 VARIANT_SUFFIX_RE = re.compile(
     r"(?:CCB|CCM|CCA|SNK|SRC|CW|CWBAL|CWRB|BALRB|BAL|DBA4|NOBCM|"
-    r"TGAR|XNRAR|ARSP|VPPVBB|IW|V2|COM)$"
+    r"TGAR|XNRAR|ARSP|VPPVBB|IW|V2|COM|XP|XN|FR)$"
 )
 # Device/ratio variants after topology digits, e.g. AOI21B1 / AOI21N2 / ND2N1.
 # Require a preceding digit so AN2 / GAN2 are not peeled.
@@ -466,11 +471,36 @@ def _peel_variant_suffixes(name: str) -> str:
     return name
 
 
+def _should_stop_drive_peel(name: str) -> bool:
+    """True when trailing D/X digits are part of the function, not drive."""
+    if PROTECTED_WHOLE_RE.fullmatch(name):
+        return True
+    if COMPOUND_ND_NR_RE.search(name):
+        return True
+    return False
+
+
 def _normalize_layout_family(name: str) -> str:
     """Collapse sized layout cells to their family prefix key."""
     for prefix in LAYOUT_FAMILY_PREFIXES:
         if name.startswith(prefix):
             return prefix
+    return name
+
+
+def _normalize_function_aliases(name: str) -> str:
+    """Merge remaining non-functional aliases into logic roots."""
+    # ISOCH/ISOCL domain-side C → ISOH/ISOL.
+    if name.startswith("ISOC") and len(name) >= 5 and name[4] in "HL":
+        name = "ISO" + name[4:]
+    # LVUFR* mid-token FR variant → LVU*.
+    if name.startswith("LVUFR"):
+        name = "LVU" + name[5:]
+    # Level-shifter buffered variant → same direction root.
+    if re.match(r"^(?:CK)?LVL.*BUFF$", name):
+        name = name[:-4]
+    if name == "BUFF":
+        name = "BUF"
     return name
 
 
@@ -506,7 +536,7 @@ def extract_function_root(name: str) -> str:
     while True:
         value = _peel_trailing_tags(value)
         value = _peel_variant_suffixes(value)
-        if PROTECTED_ROOT_RE.search(value):
+        if _should_stop_drive_peel(value):
             break
         match = DRIVE_RE.search(value)
         if match is None:
@@ -515,24 +545,25 @@ def extract_function_root(name: str) -> str:
     value = _peel_trailing_tags(value)
     value = _peel_variant_suffixes(value)
     value = _collapse_ff_tail(value)
-    return _normalize_layout_family(value)
+    value = _normalize_layout_family(value)
+    return _normalize_function_aliases(value)
 
 
 def match_function_key(
     name: str,
     function_keys: Sequence[str],
 ) -> Optional[str]:
-    """Return the first function key that prefixes name, else None.
+    """Return the first matching function key for name, else None.
 
-    Earlier keys win permanently: a name matched by OAI2211 is never
-    reconsidered by a later OAI22.
-
-    A match requires that the character after the key is not a digit, so
-    OAI22 does not steal OAI221 / OAI2222 / OAI2211; FILL1 does not steal
-    FILL12. Layout family keys (BOUNDARY/HDDICWY/HDDID) allow a following
-    digit so sized variants still collapse. Put longer non-numeric tails
-    first when needed (e.g. OAI22OAI21 before OAI22, XOR2AOI22 before XOR2).
+    Prefer the canonical extract_function_root when it appears in the key
+    list (so ISOCH… maps to ISOH after aliasing). Otherwise fall back to
+    ordered prefix match: earlier keys win permanently; a digit right after
+    the key blocks the match except for layout family keys.
     """
+    root = extract_function_root(name)
+    if root in set(function_keys):
+        return root
+
     layout_families = set(LAYOUT_FAMILY_PREFIXES)
     for key in function_keys:
         if not name.startswith(key):
