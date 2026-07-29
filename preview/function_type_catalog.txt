@@ -1,4 +1,4 @@
-# function_type_catalog: cells=1330 keys=335
+# function_type_catalog: cells=1330 keys=333
 AOI21AOI21	复合逻辑门
 AOI21OAI21	复合逻辑门
 AOI22AOI21	复合逻辑门
@@ -194,7 +194,6 @@ DCAP5	去耦电容
 DCAP8	去耦电容
 DCCKB	时钟缓冲/反相
 DCCKN	时钟单元
-FA1SN	全加器
 FCICO	进位逻辑
 FCISN	进位逻辑
 FILL1	填充单元
@@ -259,7 +258,6 @@ DELD	延时单元
 DELE	延时单元
 DELF	延时单元
 DELG	延时单元
-FA1N	全加器
 FCIS	进位逻辑
 GAN2	与门
 GAN3	与门

@@ -374,6 +374,9 @@ def _normalize_function_aliases(name: str) -> str:
         name = "GNR" + name[4:]
     if name.startswith("GXNOR"):
         name = "GXNR" + name[5:]
+    # Full-adder polarity / scan-output variants → one FA1 family.
+    if name in {"FA1N", "FA1SN"}:
+        name = "FA1"
     return name
 
 
