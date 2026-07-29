@@ -39,7 +39,7 @@ pip install -r requirements.txt
 ## 说明
 
 - 读取两个 list 文件，跳过空行与 `rg:` 开头行
-- A 列 = KEY + 第二列中文；未命中则保留原名并告警
+- A 列 = KEY + 第二列中文；未命中则在 stderr 打印完整列表（`source<TAB>cell`，来源为 NP1PP / C1Y / NP1PP+C1Y），便于复制排查
 - 写出三列 Excel：`function_key | NP1PP | C1Y`；A 列按 key 合并
 - 组内仅全名完全相同才左右同行；NP-only / C1-only 各占一行
 - Excel：字号 16、首行/首列加粗、B=C 非空浅绿、首行冻结、分组边框
