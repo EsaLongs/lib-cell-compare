@@ -145,10 +145,10 @@ PROTECTED_WHOLE_RE = re.compile(
     r"MX\d+"
     r")$"
 )
-# Real compound *ND2+/*NR2+ (not ND1 drive stuck on FA1N/FCISN/...).
+# Real compound *ND2+/*NR2+ (optional extra N: MUX2NND2); not ND1 drive.
 COMPOUND_ND_NR_RE = re.compile(
     r"(?:AOI|OAI|XOR|XNR|MUX|AN|OR|AO|OA|ND|NR|INR|IND)\d+"
-    r"(?:ND|NR)(?:[2-9]\d*)$"
+    r"N?(?:ND|NR)(?:[2-9]\d*)$"
 )
 # Non-digit-prefixed variants peeled after drive strength.
 VARIANT_SUFFIX_RE = re.compile(
