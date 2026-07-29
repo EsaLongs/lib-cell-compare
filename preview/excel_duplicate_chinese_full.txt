@@ -1,0 +1,419 @@
+来源: preview/NP1PP_vs_C1Y_preview.xlsx
+数据行: 1330
+A列唯一KEY: 333
+唯一中文: 55
+重复中文组数: 36
+涉及KEY数: 314
+
+============================================================
+一、中文重复组（完整 KEY 列表）
+============================================================
+
+【复合逻辑门】共 65 个 KEY
+    1. AOI21AOI21
+    2. AOI21OAI21
+    3. AOI22AOI21
+    4. AOI22AOI22
+    5. AOI22OAI21
+    6. OAI21AOI21
+    7. OAI21AOI22
+    8. OAI21OAI21
+    9. OAI22AOI21
+   10. OAI22OAI21
+   11. AOI211INV
+   12. INVAAOI21
+   13. INVAOAI21
+   14. INVBAOI21
+   15. INVBOAI21
+   16. OAI211INV
+   17. WAO21OA21
+   18. WAO22OA22
+   19. XNR2AOI21
+   20. XNR2AOI22
+   21. XNR2OAI21
+   22. XNR2OAI22
+   23. XOR2AOI21
+   24. XOR2AOI22
+   25. XOR2OAI21
+   26. XOR2OAI22
+   27. AOI21ND2
+   28. AOI21NR2
+   29. AOI22INV
+   30. AOI22ND2
+   31. AOI22NR2
+   32. ND2AOI21
+   33. ND2IOA21
+   34. ND2OAI21
+   35. NR2AOI21
+   36. OAI21ND2
+   37. OAI21NR2
+   38. OAI22INV
+   39. OAI22ND2
+   40. OAI22NR2
+   41. XNR2XNR2
+   42. XNR2XOR2
+   43. XOR2XNR2
+   44. XOR2XOR2
+   45. AOAI211
+   46. MAOI222
+   47. OAOI211
+   48. W2AOI22
+   49. WAN2OR2
+   50. XNR2ND2
+   51. XNR2NR2
+   52. XOR2ND2
+   53. XOR2NR2
+   54. AIOI21
+   55. IAOI21
+   56. IOAI21
+   57. MAOI22
+   58. MOAI22
+   59. NR2ND2
+   60. OIAI21
+   61. W2AO22
+   62. IAO21
+   63. IAO22
+   64. IOA21
+   65. IOA22
+
+【填充单元】共 21 个 KEY
+    1. GFILL10
+    2. GFILL11
+    3. GFILL12
+    4. FILL12
+    5. FILL16
+    6. FILL32
+    7. FILL64
+    8. GFILL1
+    9. GFILL2
+   10. GFILL3
+   11. GFILL4
+   12. GFILL5
+   13. GFILL6
+   14. GFILL7
+   15. GFILL8
+   16. GFILL9
+   17. FILL1
+   18. FILL2
+   19. FILL3
+   20. FILL4
+   21. FILL8
+
+【与或非门】共 20 个 KEY
+    1. AOI2111
+    2. AOI2211
+    3. AOI2221
+    4. AOI2222
+    5. GAOI211
+    6. AOI211
+    7. AOI221
+    8. AOI222
+    9. AOI311
+   10. AOI321
+   11. GAOI21
+   12. GAOI22
+   13. GAOI31
+   14. GAOI32
+   15. GAOI33
+   16. AOI21
+   17. AOI22
+   18. AOI31
+   19. AOI32
+   20. AOI33
+
+【或与非门】共 20 个 KEY
+    1. GOAI211
+    2. OAI2111
+    3. OAI2211
+    4. OAI2221
+    5. OAI2222
+    6. GOAI21
+    7. GOAI22
+    8. GOAI31
+    9. GOAI32
+   10. GOAI33
+   11. OAI211
+   12. OAI221
+   13. OAI222
+   14. OAI311
+   15. OAI321
+   16. OAI21
+   17. OAI22
+   18. OAI31
+   19. OAI32
+   20. OAI33
+
+【去耦电容】共 15 个 KEY
+    1. GDCAP10
+    2. GDCAP12
+    3. DCAP10
+    4. DCAP16
+    5. DCAP20
+    6. DCAP32
+    7. DCAP40
+    8. DCAP64
+    9. GDCAP2
+   10. GDCAP4
+   11. GDCAP6
+   12. GDCAP8
+   13. DCAP4
+   14. DCAP5
+   15. DCAP8
+
+【锁存器】共 14 个 KEY
+    1. GLAHRNQ
+    2. GLHCNQ
+    3. GLNCNQ
+    4. LHCSNQ
+    5. LNCSNQ
+    6. GLAHQ
+    7. LHCNQ
+    8. LHSNQ
+    9. LNCNQ
+   10. LNSNQ
+   11. GLHQ
+   12. GLNQ
+   13. LHQ
+   14. LNQ
+
+【与非门】共 11 个 KEY
+    1. IIND3
+    2. IIND4
+    3. GND2
+    4. GND3
+    5. GND4
+    6. IND2
+    7. IND3
+    8. IND4
+    9. ND2
+   10. ND3
+   11. ND4
+
+【或非门】共 11 个 KEY
+    1. IINR3
+    2. IINR4
+    3. GNR2
+    4. GNR3
+    5. GNR4
+    6. INR2
+    7. INR3
+    8. INR4
+    9. NR2
+   10. NR3
+   11. NR4
+
+【扫描触发器】共 11 个 KEY
+    1. Y2SDFF
+    2. Y3SDFF
+    3. SD2FF
+    4. Y2SDF
+    5. Y3SDF
+    6. GSDF
+    7. RSDF
+    8. SDFF
+    9. SEDF
+   10. YSDF
+   11. SDF
+
+【多比特锁存器】共 10 个 KEY
+    1. MB2LHSPCNQ
+    2. MB2LNSPCNQ
+    3. MB2LHCNQ
+    4. MB2LNCNQ
+    5. MB2LHQ
+    6. MB2LNQ
+    7. MB4LHQ
+    8. MB4LNQ
+    9. MCECNQ
+   10. MCESNQ
+
+【与或门】共 9 个 KEY
+    1. AO211
+    2. AO222
+    3. GAO21
+    4. GAO22
+    5. GAO31
+    6. GAO32
+    7. AO21
+    8. AO22
+    9. AO33
+
+【或与门】共 9 个 KEY
+    1. OA2222
+    2. GOA21
+    3. GOA22
+    4. GOA31
+    5. GOA32
+    6. OA211
+    7. OA222
+    8. OA21
+    9. OA22
+
+【延时单元】共 7 个 KEY
+    1. DELA
+    2. DELB
+    3. DELC
+    4. DELD
+    5. DELE
+    6. DELF
+    7. DELG
+
+【电平转换器】共 7 个 KEY
+    1. CKLVLLH
+    2. LVUAN2
+    3. LVUOR2
+    4. CKLVU
+    5. LVLHL
+    6. LVLLH
+    7. LVU
+
+【进位逻辑】共 7 个 KEY
+    1. FCSICON
+    2. FCICON
+    3. FCONSN
+    4. FIICON
+    5. FCICO
+    6. FCISN
+    7. FCIS
+
+【与门】共 6 个 KEY
+    1. GAN2
+    2. GAN3
+    3. GAN4
+    4. AN2
+    5. AN3
+    6. AN4
+
+【多路选择器】共 6 个 KEY
+    1. GMUX2
+    2. MUX2
+    3. MUX3
+    4. MUX4
+    5. MUX8
+    6. MX2
+
+【或门】共 6 个 KEY
+    1. GOR2
+    2. GOR3
+    3. GOR4
+    4. OR2
+    5. OR3
+    6. OR4
+
+【电平钳位】共 6 个 KEY
+    1. APTIEH
+    2. APTIEL
+    3. GTIEH
+    4. GTIEL
+    5. TIEH
+    6. TIEL
+
+【反相多路选择器】共 5 个 KEY
+    1. GMUX2N
+    2. MUX2I
+    3. MUX3N
+    4. MUX4N
+    5. MXI2
+
+【复合多路选择器】共 5 个 KEY
+    1. MUX2NND2
+    2. MUX2NNR2
+    3. MUX2AOI
+    4. MUX2ND2
+    5. MUX2NR2
+
+【同或门】共 4 个 KEY
+    1. GXNR2
+    2. XNR2
+    3. XNR3
+    4. XNR4
+
+【同步器】共 4 个 KEY
+    1. SYNLHCNQ
+    2. SYNLHRPQ
+    3. SYNLHSNQ
+    4. SYNLHQ
+
+【异或门】共 4 个 KEY
+    1. GXOR2
+    2. XOR2
+    3. XOR3
+    4. XOR4
+
+【时钟锁存器】共 4 个 KEY
+    1. CKLNCNQ
+    2. GCKLNQ
+    3. CKLHQ
+    4. CKLNQ
+
+【半加器】共 3 个 KEY
+    1. HAC1
+    2. HAN1
+    3. HA1
+
+【反相器】共 3 个 KEY
+    1. APINV
+    2. GINV
+    3. INV
+
+【时钟缓冲/反相】共 3 个 KEY
+    1. DCCKB
+    2. CKB
+    3. CKN
+
+【缓冲器】共 3 个 KEY
+    1. APBUF
+    2. GBUFF
+    3. BUF
+
+【边界/版图单元】共 3 个 KEY
+    1. BOUNDARY
+    2. HDDICWY
+    3. HDDID
+
+【D触发器】共 2 个 KEY
+    1. GDF
+    2. DF
+
+【上拉/下拉】共 2 个 KEY
+    1. GPULL0
+    2. GPULL1
+
+【压缩器】共 2 个 KEY
+    1. CMPE32
+    2. CMPE42
+
+【多比特触发器】共 2 个 KEY
+    1. MB2SRLSDF
+    2. MB4SRLSDF
+
+【编码器】共 2 个 KEY
+    1. BENCGRF
+    2. BENC
+
+【隔离单元】共 2 个 KEY
+    1. ISOH
+    2. ISOL
+
+============================================================
+二、中文仅对应 1 个 KEY（无重复）
+============================================================
+  三态缓冲器	BUFT
+  使能扫描触发器	SDFFE
+  使能触发器	EDF
+  全加器	FA1
+  同步触发器	SDFSYNC1
+  多比特同步器	MCESNQSYN
+  天线二极管	ANTENNA
+  总线保持器	BHD
+  时钟与门	CKAN2
+  时钟与非门	CKND2
+  时钟单元	DCCKN
+  时钟多路选择器	CKMUX2
+  时钟异或门	CKXOR2
+  时钟或门	CKOR2
+  时钟或非门	CKNR2
+  焊盘反相器	INVPAD
+  辅助单元	BML
+  门控时钟	GCKNQ
+  阱敲击单元	TAPCELL
