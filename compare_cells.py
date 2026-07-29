@@ -244,10 +244,16 @@ KEY_FAMILY_RULES: Tuple[Tuple[Pattern[str], str, str], ...] = (
     (re.compile(r"^MB\d+SRLSDF$"), "MBSDF", ""),
     (re.compile(r"^MB\d+"), "MBLAT", ""),
     (re.compile(r"^MCE"), "MCE", ""),
-    (re.compile(r"^GCKLNQ$"), "GCKLNQ", "门阵列ECO"),
-    (re.compile(r"^CKLNCNQ$"), "CKLNCNQ", "低电平·带CN"),
-    (re.compile(r"^CKLNQ$"), "CKLNQ", "低电平"),
-    (re.compile(r"^CKLHQ$"), "CKLHQ", "高电平"),
+    # Latches (incl. clock latches): only LH vs LN; LAH counted as high.
+    (re.compile(r"LN"), "LN", "低电平透明"),
+    (re.compile(r"LH|LAH"), "LH", "高电平透明"),
+    # Scan FF: only Y-series vs non-Y.
+    (re.compile(r"^Y"), "YSCAN", "Y系列"),
+    (
+        re.compile(r"^(?:G|R)?SDF$|^SDFF$|^SD2FF$|^SEDF$"),
+        "SCAN",
+        "非Y扫描",
+    ),
     (re.compile(r"^DCCKB$"), "DCCKB", "DC时钟缓冲"),
     (re.compile(r"^CKB$"), "CKB", "时钟缓冲"),
     (re.compile(r"^CKN$"), "CKN", "时钟反相"),
@@ -258,33 +264,21 @@ KEY_FAMILY_RULES: Tuple[Tuple[Pattern[str], str, str], ...] = (
     (re.compile(r"^BOUNDARY$"), "BOUNDARY", "BOUNDARY"),
     (re.compile(r"^HDDICWY$"), "HDDICWY", "HDDICWY"),
     (re.compile(r"^HDDID$"), "HDDID", "HDDID"),
-    (re.compile(r"^GLAHRNQ$"), "GLAHRNQ", "门阵列·AH·RNQ"),
-    (re.compile(r"^GLAHQ$"), "GLAHQ", "门阵列·AH"),
-    (re.compile(r"^GLHCNQ$"), "GLHCNQ", "门阵列·高·CNQ"),
-    (re.compile(r"^GLNCNQ$"), "GLNCNQ", "门阵列·低·CNQ"),
-    (re.compile(r"^GLHQ$"), "GLHQ", "门阵列·高"),
-    (re.compile(r"^GLNQ$"), "GLNQ", "门阵列·低"),
-    (re.compile(r"^LHCSNQ$"), "LHCSNQ", "高·CSNQ"),
-    (re.compile(r"^LNCSNQ$"), "LNCSNQ", "低·CSNQ"),
-    (re.compile(r"^LHCNQ$"), "LHCNQ", "高·CNQ"),
-    (re.compile(r"^LNCNQ$"), "LNCNQ", "低·CNQ"),
-    (re.compile(r"^LHSNQ$"), "LHSNQ", "高·SNQ"),
-    (re.compile(r"^LNSNQ$"), "LNSNQ", "低·SNQ"),
-    (re.compile(r"^LHQ$"), "LHQ", "高电平"),
-    (re.compile(r"^LNQ$"), "LNQ", "低电平"),
-    (re.compile(r"^Y\d*SDFF$"), "YSDFF", "Y扫描SDFF"),
-    (re.compile(r"^SDFF$"), "SDFF", "扫描SDFF"),
-    (re.compile(r"^Y\d*SDF$"), "YSDF", "Y扫描SDF"),
-    (re.compile(r"^GSDF$"), "GSDF", "门阵列ECO扫描"),
-    (re.compile(r"^RSDF$"), "RSDF", "R扫描SDF"),
-    (re.compile(r"^SEDF$"), "SEDF", "使能扫描EDF"),
-    (re.compile(r"^SD2FF$"), "SD2FF", "SD2FF"),
-    (re.compile(r"^SDF$"), "SDF", "扫描SDF"),
-    # Carry logic: keep one family for now (equals A → no B chinese)
     (re.compile(r"^FC"), "FC", ""),
     (re.compile(r"^FI"), "FI", ""),
-    # Remaining compound / misc keys stay themselves via fallback.
 )
+
+
+def key_family(function_key: str) -> Tuple[str, str]:
+    """Return (family_id, fine_zh) for column-B merging."""
+    for pattern, family_id, fine_zh in KEY_FAMILY_RULES:
+        if pattern.search(function_key):
+            return family_id, fine_zh
+    # Compound / leftover: ignore 21/22-style digits, keep boolean skeleton.
+    skeleton = re.sub(r"\d+", "", function_key)
+    if skeleton and skeleton != function_key:
+        return skeleton, f"复合·{skeleton}"
+    return function_key, ""
 
 
 # #### CLI
@@ -569,14 +563,6 @@ def match_function_key(
 def chinese_for_key(function_key: str, zh_map: Dict[str, str]) -> str:
     """Return the coarse Chinese label for column A (may be empty)."""
     return zh_map.get(function_key, "")
-
-
-def key_family(function_key: str) -> Tuple[str, str]:
-    """Return (family_id, fine_zh) for column-B merging."""
-    for pattern, family_id, fine_zh in KEY_FAMILY_RULES:
-        if pattern.search(function_key):
-            return family_id, fine_zh
-    return function_key, ""
 
 
 def format_family_column_label(
