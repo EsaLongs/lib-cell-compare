@@ -44,6 +44,7 @@ pip install -r requirements.txt
   - B 列：英文族名（如 `AO`/`GAO`）；仅当该族是 A 组内子集时附加区分用中文（如 `门阵列ECO`）
   - C/D 列：库 cell 名，不按中文合并
 - 行顺序：先按中文，再按 KEY
-- 未命中则在 stderr 打印完整列表（`source<TAB>cell`）
+- 未命中 KEY 时在 stderr 打印完整列表（`# source<TAB>cell`），便于补 list / KEY 表
+- 同 A 大类下多族且某族缺少细中文（`fine_zh`）时，stderr 另打一份清单（`# coarse_zh<TAB>family<TAB>source<TAB>cell`），便于复制回来补规则
 - 组内仅全名完全相同才左右同行；NP-only / C1-only 各占一行
 - Excel：字号 16、加粗、C=D 非空浅绿、首行冻结、分组边框
