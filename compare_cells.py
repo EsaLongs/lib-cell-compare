@@ -234,7 +234,9 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         help=(
             "Optional TSV map of KEY<TAB>中文 for column-A labels "
             "(e.g. preview/function_key_zh.txt). Editable; missing keys "
-            "fall back to built-in describe_function_key()."
+            "fall back to built-in describe_function_key(). If omitted and "
+            "--function-keys-file is set, auto-loads the sibling "
+            "function_key_zh.txt when present."
         ),
     )
     parser.add_argument(
