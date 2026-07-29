@@ -7,7 +7,7 @@
 只需一份 **`KEY<TAB>中文`** 表（如 `preview/function_key_zh.txt`）：
 
 - 第一列英文 KEY → 匹配顺序（先命中生效）
-- 第二列中文 → Excel A 列显示（直接改文件即可）
+- 第二列中文 → Excel **A 列**（纯中文，同中文合并）及 **B 列**（KEY+中文）
 
 ```bash
 python3 compare_cells.py \
@@ -39,7 +39,11 @@ pip install -r requirements.txt
 ## 说明
 
 - 读取两个 list 文件，跳过空行与 `rg:` 开头行
-- A 列 = KEY + 第二列中文；未命中则在 stderr 打印完整列表（`source<TAB>cell`，来源为 NP1PP / C1Y / NP1PP+C1Y），便于复制排查
-- 写出三列 Excel：`function_key | NP1PP | C1Y`；A 列按 key 合并
+- Excel 四列：`中文 | KEY(+中文) | NP1PP | C1Y`
+  - A 列：纯中文，按相同中文合并
+  - B 列：英文 KEY + 中文，按 KEY 合并（原 A 列逻辑）
+  - C/D 列：库 cell 名，不按中文合并
+- 行顺序：先按中文，再按 KEY
+- 未命中则在 stderr 打印完整列表（`source<TAB>cell`）
 - 组内仅全名完全相同才左右同行；NP-only / C1-only 各占一行
-- Excel：字号 16、首行/首列加粗、B=C 非空浅绿、首行冻结、分组边框
+- Excel：字号 16、加粗、C=D 非空浅绿、首行冻结、分组边框

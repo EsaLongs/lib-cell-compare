@@ -5,7 +5,8 @@ Usage:
     python3 compare_cells.py --function-key-zh-file preview/function_key_zh.txt
 
 --function-key-zh-file is a KEY<TAB>中文 table: column 1 is match order,
-column 2 is the Chinese label in Excel column A (edit the file to change).
+column 2 is the Chinese label shown in Excel column A (and with the KEY
+in column B).
 """
 
 from __future__ import annotations
@@ -27,7 +28,7 @@ C1_FILE = "/mnt/c/Users/t00961128/Downloads/C1Y.list"
 OUTPUT = "/mnt/c/Users/t00961128/Downloads/NP1PP_vs_C1Y.xlsx"
 
 SHEET_TITLE = "Cell Comparison"
-COL_WIDTHS = {"A": 28, "B": 55, "C": 55}
+COL_WIDTHS = {"A": 16, "B": 28, "C": 55, "D": 55}
 FONT_SIZE = 16
 MATCH_FILL = PatternFill(fill_type="solid", fgColor="C6EFCE")
 NORMAL_FONT = Font(size=FONT_SIZE)
@@ -37,6 +38,7 @@ BORDER_SIDE = Side(style="thin", color="000000")
 TOP_BOTTOM_BORDER = Border(top=BORDER_SIDE, bottom=BORDER_SIDE)
 TOP_BORDER = Border(top=BORDER_SIDE)
 BOTTOM_BORDER = Border(bottom=BORDER_SIDE)
+LAST_DATA_COLUMN = 4
 
 # Mid-name process/optimization markers: cut from here to end (pre-COT).
 FUNCTION_CUT_TOKENS = (
@@ -178,7 +180,7 @@ FF_STEMS = (
     "DF",
 )
 
-CellRow = Tuple[str, Optional[str], Optional[str]]
+CellRow = Tuple[str, str, Optional[str], Optional[str]]
 GroupItem = Tuple[str, bool, bool]
 
 
@@ -461,19 +463,24 @@ def match_function_key(
     return None
 
 
-def format_column_a_label(function_key: str, zh_map: Dict[str, str]) -> str:
-    """Build merged-cell text: function key plus Chinese from the zh table."""
+def format_key_column_label(function_key: str, zh_map: Dict[str, str]) -> str:
+    """Build column-B text: function key plus Chinese brief."""
     chinese = zh_map.get(function_key, "")
     if chinese:
         return f"{function_key}\n{chinese}"
     return function_key
 
 
+def chinese_for_key(function_key: str, zh_map: Dict[str, str]) -> str:
+    """Return the coarse Chinese label for column A (may be empty)."""
+    return zh_map.get(function_key, "")
+
+
 def make_display_key(
     name: str,
     function_keys: Sequence[str],
 ) -> Tuple[str, bool]:
-    """Build column-A key via root / ordered prefix match.
+    """Build column-B key via root / ordered prefix match.
 
     Returns (key, matched). Unmatched cells keep the original name so gaps
     stay visible in the spreadsheet.
@@ -527,7 +534,7 @@ def print_unmatched_cells(
     """Print every unmatched cell with its source list (copy-paste friendly)."""
     print(
         f"Warning: {len(unmatched)} unmatched cells "
-        "(kept as column-A keys). Full list:",
+        "(kept as column-B keys). Full list:",
         file=sys.stderr,
     )
     print("# source\tcell", file=sys.stderr)
@@ -573,47 +580,65 @@ def build_rows(
 
     Only identical full cell names share a row (both NP and C1 filled).
     NP-only and C1-only cells each get their own row.
+
+    Rows are ordered by Chinese label, then by function key, so column A
+    (Chinese-only) can merge contiguous same-Chinese blocks.
     """
+    keyed_blocks: List[Tuple[str, str, str, List[GroupItem]]] = []
+    for key, items in groups.items():
+        chinese = chinese_for_key(key, zh_map)
+        key_label = format_key_column_label(key, zh_map)
+        keyed_blocks.append((chinese, key, key_label, items))
+
+    keyed_blocks.sort(key=lambda block: (block[0] or "\uffff", block[1]))
+
     rows: List[CellRow] = []
-    for key in sorted(groups.keys()):
-        display = format_column_a_label(key, zh_map)
-        exact_matches, np_only, c1_only = _partition_group(groups[key])
+    for chinese, _key, key_label, items in keyed_blocks:
+        exact_matches, np_only, c1_only = _partition_group(items)
         for cell in exact_matches:
-            rows.append((display, cell, cell))
+            rows.append((chinese, key_label, cell, cell))
         for cell in np_only:
-            rows.append((display, cell, None))
+            rows.append((chinese, key_label, cell, None))
         for cell in c1_only:
-            rows.append((display, None, cell))
+            rows.append((chinese, key_label, None, cell))
     return rows
 
 
 # #### Excel writing
-def _iter_display_key_groups(rows: Sequence[CellRow]) -> List[Tuple[int, int]]:
-    """Return inclusive Excel row ranges for each contiguous display-key group."""
+def _iter_value_groups(
+    rows: Sequence[CellRow],
+    value_index: int,
+) -> List[Tuple[int, int]]:
+    """Return inclusive Excel row ranges for contiguous equal values."""
     if not rows:
         return []
 
     groups: List[Tuple[int, int]] = []
     group_start = 2
-    current_key = rows[0][0]
+    current = rows[0][value_index]
     for index in range(1, len(rows)):
-        if rows[index][0] != current_key:
+        if rows[index][value_index] != current:
             groups.append((group_start, index + 1))
             group_start = index + 2
-            current_key = rows[index][0]
+            current = rows[index][value_index]
     groups.append((group_start, len(rows) + 1))
     return groups
 
 
-def _merge_display_key_column(worksheet: Worksheet, rows: Sequence[CellRow]) -> None:
-    """Merge contiguous identical display-key cells in column A."""
-    for start_row, end_row in _iter_display_key_groups(rows):
+def _merge_column_by_value(
+    worksheet: Worksheet,
+    rows: Sequence[CellRow],
+    excel_column: int,
+    value_index: int,
+) -> None:
+    """Merge contiguous identical values in one column."""
+    for start_row, end_row in _iter_value_groups(rows, value_index):
         if end_row > start_row:
             worksheet.merge_cells(
                 start_row=start_row,
-                start_column=1,
+                start_column=excel_column,
                 end_row=end_row,
-                end_column=1,
+                end_column=excel_column,
             )
 
 
@@ -622,16 +647,17 @@ def _apply_row_border(
     row_index: int,
     border: Border,
 ) -> None:
-    """Apply a border style across columns A-C on one row."""
-    for column in range(1, 4):
+    """Apply a border style across data columns on one row."""
+    for column in range(1, LAST_DATA_COLUMN + 1):
         worksheet.cell(row=row_index, column=column).border = border
 
 
 def _apply_section_borders(worksheet: Worksheet, rows: Sequence[CellRow]) -> None:
-    """Add top/bottom borders for display-key groups; header keeps top only."""
+    """Add top/bottom borders for KEY groups; header keeps top only."""
     _apply_row_border(worksheet, 1, TOP_BORDER)
 
-    for start_row, end_row in _iter_display_key_groups(rows):
+    # Section borders still follow column-B KEY blocks.
+    for start_row, end_row in _iter_value_groups(rows, 1):
         if start_row == end_row:
             _apply_row_border(worksheet, start_row, TOP_BOTTOM_BORDER)
             continue
@@ -647,16 +673,19 @@ def _format_worksheet(worksheet: Worksheet, rows: Sequence[CellRow]) -> None:
 
     worksheet.freeze_panes = "A2"
 
-    for column in range(1, 4):
+    for column in range(1, LAST_DATA_COLUMN + 1):
         worksheet.cell(row=1, column=column).font = BOLD_FONT
 
     for row_index in range(2, row_count + 2):
-        key_cell = worksheet.cell(row=row_index, column=1)
+        zh_cell = worksheet.cell(row=row_index, column=1)
+        key_cell = worksheet.cell(row=row_index, column=2)
+        zh_cell.font = BOLD_FONT
         key_cell.font = BOLD_FONT
+        zh_cell.alignment = KEY_ALIGNMENT
         key_cell.alignment = KEY_ALIGNMENT
 
-        np_cell = worksheet.cell(row=row_index, column=2)
-        c1_cell = worksheet.cell(row=row_index, column=3)
+        np_cell = worksheet.cell(row=row_index, column=3)
+        c1_cell = worksheet.cell(row=row_index, column=4)
         np_cell.font = NORMAL_FONT
         c1_cell.font = NORMAL_FONT
 
@@ -679,18 +708,24 @@ def write_excel(output_path: str, rows: Sequence[CellRow]) -> None:
     workbook.remove(default_sheet)
     worksheet = workbook.create_sheet(SHEET_TITLE)
 
-    worksheet["A1"] = ""
-    worksheet["B1"] = "NP1PP"
-    worksheet["C1"] = "C1Y"
+    worksheet["A1"] = "中文"
+    worksheet["B1"] = ""
+    worksheet["C1"] = "NP1PP"
+    worksheet["D1"] = "C1Y"
 
-    for row_index, (key, np_val, c1_val) in enumerate(rows, start=2):
-        worksheet.cell(row=row_index, column=1, value=key)
+    for row_index, (chinese, key_label, np_val, c1_val) in enumerate(
+        rows, start=2
+    ):
+        worksheet.cell(row=row_index, column=1, value=chinese)
+        worksheet.cell(row=row_index, column=2, value=key_label)
         if np_val:
-            worksheet.cell(row=row_index, column=2, value=np_val)
+            worksheet.cell(row=row_index, column=3, value=np_val)
         if c1_val:
-            worksheet.cell(row=row_index, column=3, value=c1_val)
+            worksheet.cell(row=row_index, column=4, value=c1_val)
 
-    _merge_display_key_column(worksheet, rows)
+    # A: merge same Chinese; B: merge same KEY label (unchanged rule).
+    _merge_column_by_value(worksheet, rows, excel_column=1, value_index=0)
+    _merge_column_by_value(worksheet, rows, excel_column=2, value_index=1)
     _format_worksheet(worksheet, rows)
     workbook.save(output_path)
 
