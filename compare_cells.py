@@ -183,6 +183,109 @@ FF_STEMS = (
 CellRow = Tuple[str, str, Optional[str], Optional[str]]
 GroupItem = Tuple[str, bool, bool]
 
+# Column-B family merges within a coarse Chinese (A) group.
+# Longer / more-specific patterns must come first.
+# fine_zh is emitted only when this family is a proper subset of its A group.
+KEY_FAMILY_RULES: Tuple[Tuple[Pattern[str], str, str], ...] = (
+    (re.compile(r"^GDF$"), "GDF", "门阵列ECO"),
+    (re.compile(r"^DF$"), "DF", "标准单元"),
+    (re.compile(r"^GPULL\d+$"), "GPULL", ""),
+    (re.compile(r"^GAOI\d+$"), "GAOI", "门阵列ECO"),
+    (re.compile(r"^AOI\d+$"), "AOI", "标准单元"),
+    (re.compile(r"^GOAI\d+$"), "GOAI", "门阵列ECO"),
+    (re.compile(r"^OAI\d+$"), "OAI", "标准单元"),
+    (re.compile(r"^GAO\d+$"), "GAO", "门阵列ECO"),
+    (re.compile(r"^AO\d+$"), "AO", "标准单元"),
+    (re.compile(r"^GOA\d+$"), "GOA", "门阵列ECO"),
+    (re.compile(r"^OA\d+$"), "OA", "标准单元"),
+    (re.compile(r"^GAN\d+$"), "GAN", "门阵列ECO"),
+    (re.compile(r"^AN\d+$"), "AN", "标准单元"),
+    (re.compile(r"^IIND\d+$"), "IIND", "双输入反相与非"),
+    (re.compile(r"^IND\d+$"), "IND", "单输入反相与非"),
+    (re.compile(r"^GND\d+$"), "GND", "门阵列ECO"),
+    (re.compile(r"^ND\d+$"), "ND", "标准与非"),
+    (re.compile(r"^IINR\d+$"), "IINR", "双输入反相或非"),
+    (re.compile(r"^INR\d+$"), "INR", "单输入反相或非"),
+    (re.compile(r"^GNR\d+$"), "GNR", "门阵列ECO"),
+    (re.compile(r"^NR\d+$"), "NR", "标准或非"),
+    (re.compile(r"^GOR\d+$"), "GOR", "门阵列ECO"),
+    (re.compile(r"^OR\d+$"), "OR", "标准单元"),
+    (re.compile(r"^GXOR\d+$"), "GXOR", "门阵列ECO"),
+    (re.compile(r"^XOR\d+$"), "XOR", "标准单元"),
+    (re.compile(r"^GXNR\d+$"), "GXNR", "门阵列ECO"),
+    (re.compile(r"^XNR\d+$"), "XNR", "标准单元"),
+    (re.compile(r"^GFILL\d+$"), "GFILL", "门阵列ECO"),
+    (re.compile(r"^FILL\d+$"), "FILL", "标准单元"),
+    (re.compile(r"^GDCAP\d+$"), "GDCAP", "门阵列ECO"),
+    (re.compile(r"^DCAP\d+$"), "DCAP", "标准单元"),
+    (re.compile(r"^GBUFF$"), "GBUFF", "门阵列ECO"),
+    (re.compile(r"^APBUF$"), "APBUF", "AP系列"),
+    (re.compile(r"^BUF$"), "BUF", "标准单元"),
+    (re.compile(r"^GINV$"), "GINV", "门阵列ECO"),
+    (re.compile(r"^APINV$"), "APINV", "AP系列"),
+    (re.compile(r"^INV$"), "INV", "标准单元"),
+    (re.compile(r"^APTIE[HL]$"), "APTIE", "AP系列"),
+    (re.compile(r"^GTIE[HL]$"), "GTIE", "门阵列ECO"),
+    (re.compile(r"^TIE[HL]$"), "TIE", "标准单元"),
+    (re.compile(r"^GMUX2N$"), "GMUX2N", "门阵列ECO反相"),
+    (re.compile(r"^GMUX\d+$"), "GMUX", "门阵列ECO"),
+    (re.compile(r"^MUX\d+N$"), "MUXN", "标准反相"),
+    (re.compile(r"^MUX\d+I$"), "MUXI", "标准反相"),
+    (re.compile(r"^MXI\d+$"), "MXI", "标准反相"),
+    (re.compile(r"^MUX\d+$"), "MUX", "标准单元"),
+    (re.compile(r"^MX\d+$"), "MX", "标准单元"),
+    (re.compile(r"^MUX2"), "MUX2CMP", "复合MUX2"),
+    (re.compile(r"^ISO[HL]$"), "ISO", ""),
+    (re.compile(r"^DEL[A-Z]$"), "DEL", ""),
+    (re.compile(r"^HA(?:C|N)?1$"), "HA", ""),
+    (re.compile(r"^BENC"), "BENC", ""),
+    (re.compile(r"^CMPE\d+$"), "CMPE", ""),
+    (re.compile(r"^SYNLH"), "SYNLH", ""),
+    (re.compile(r"^MB\d+SRLSDF$"), "MBSDF", ""),
+    (re.compile(r"^MB\d+"), "MBLAT", ""),
+    (re.compile(r"^MCE"), "MCE", ""),
+    (re.compile(r"^GCKLNQ$"), "GCKLNQ", "门阵列ECO"),
+    (re.compile(r"^CKLNCNQ$"), "CKLNCNQ", "低电平·带CN"),
+    (re.compile(r"^CKLNQ$"), "CKLNQ", "低电平"),
+    (re.compile(r"^CKLHQ$"), "CKLHQ", "高电平"),
+    (re.compile(r"^DCCKB$"), "DCCKB", "DC时钟缓冲"),
+    (re.compile(r"^CKB$"), "CKB", "时钟缓冲"),
+    (re.compile(r"^CKN$"), "CKN", "时钟反相"),
+    (re.compile(r"^CKLVL"), "CKLVL", "时钟域"),
+    (re.compile(r"^CKLVU"), "CKLVU", "时钟域"),
+    (re.compile(r"^LVU"), "LVU", "LVU系列"),
+    (re.compile(r"^LVL"), "LVL", "LVL系列"),
+    (re.compile(r"^BOUNDARY$"), "BOUNDARY", "BOUNDARY"),
+    (re.compile(r"^HDDICWY$"), "HDDICWY", "HDDICWY"),
+    (re.compile(r"^HDDID$"), "HDDID", "HDDID"),
+    (re.compile(r"^GLAHRNQ$"), "GLAHRNQ", "门阵列·AH·RNQ"),
+    (re.compile(r"^GLAHQ$"), "GLAHQ", "门阵列·AH"),
+    (re.compile(r"^GLHCNQ$"), "GLHCNQ", "门阵列·高·CNQ"),
+    (re.compile(r"^GLNCNQ$"), "GLNCNQ", "门阵列·低·CNQ"),
+    (re.compile(r"^GLHQ$"), "GLHQ", "门阵列·高"),
+    (re.compile(r"^GLNQ$"), "GLNQ", "门阵列·低"),
+    (re.compile(r"^LHCSNQ$"), "LHCSNQ", "高·CSNQ"),
+    (re.compile(r"^LNCSNQ$"), "LNCSNQ", "低·CSNQ"),
+    (re.compile(r"^LHCNQ$"), "LHCNQ", "高·CNQ"),
+    (re.compile(r"^LNCNQ$"), "LNCNQ", "低·CNQ"),
+    (re.compile(r"^LHSNQ$"), "LHSNQ", "高·SNQ"),
+    (re.compile(r"^LNSNQ$"), "LNSNQ", "低·SNQ"),
+    (re.compile(r"^LHQ$"), "LHQ", "高电平"),
+    (re.compile(r"^LNQ$"), "LNQ", "低电平"),
+    (re.compile(r"^Y\d*SDFF$"), "YSDFF", "Y扫描SDFF"),
+    (re.compile(r"^SDFF$"), "SDFF", "扫描SDFF"),
+    (re.compile(r"^Y\d*SDF$"), "YSDF", "Y扫描SDF"),
+    (re.compile(r"^GSDF$"), "GSDF", "门阵列ECO扫描"),
+    (re.compile(r"^RSDF$"), "RSDF", "R扫描SDF"),
+    (re.compile(r"^SEDF$"), "SEDF", "使能扫描EDF"),
+    (re.compile(r"^SD2FF$"), "SD2FF", "SD2FF"),
+    (re.compile(r"^SDF$"), "SDF", "扫描SDF"),
+    # Carry logic: keep one family for now (equals A → no B chinese)
+    (re.compile(r"^FC"), "FC", ""),
+    (re.compile(r"^FI"), "FI", ""),
+    # Remaining compound / misc keys stay themselves via fallback.
+)
+
 
 # #### CLI
 def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -463,22 +566,39 @@ def match_function_key(
     return None
 
 
-def format_key_column_label(function_key: str, zh_map: Dict[str, str]) -> str:
-    """Build column-B text: English function key only."""
-    del zh_map  # Chinese is shown only in column A.
-    return function_key
-
-
 def chinese_for_key(function_key: str, zh_map: Dict[str, str]) -> str:
     """Return the coarse Chinese label for column A (may be empty)."""
     return zh_map.get(function_key, "")
+
+
+def key_family(function_key: str) -> Tuple[str, str]:
+    """Return (family_id, fine_zh) for column-B merging."""
+    for pattern, family_id, fine_zh in KEY_FAMILY_RULES:
+        if pattern.search(function_key):
+            return family_id, fine_zh
+    return function_key, ""
+
+
+def format_family_column_label(
+    family_id: str,
+    fine_zh: str,
+    sole_family_in_chinese: bool,
+) -> str:
+    """Build column-B text: family English, plus fine Chinese when needed.
+
+    Skip Chinese when this family alone fills the whole A-group, or when no
+    fine label is defined.
+    """
+    if sole_family_in_chinese or not fine_zh:
+        return family_id
+    return f"{family_id}\n{fine_zh}"
 
 
 def make_display_key(
     name: str,
     function_keys: Sequence[str],
 ) -> Tuple[str, bool]:
-    """Build column-B key via root / ordered prefix match.
+    """Build match key via root / ordered prefix match.
 
     Returns (key, matched). Unmatched cells keep the original name so gaps
     stay visible in the spreadsheet.
@@ -579,26 +699,37 @@ def build_rows(
     Only identical full cell names share a row (both NP and C1 filled).
     NP-only and C1-only cells each get their own row.
 
-    Rows are ordered by Chinese label, then by function key, so column A
-    (Chinese-only) can merge contiguous same-Chinese blocks.
+    Rows are ordered by coarse Chinese (A), then B-family, so A/B merges
+    stay contiguous. Column B may add a fine Chinese label when multiple
+    families share one A-group.
     """
-    keyed_blocks: List[Tuple[str, str, str, List[GroupItem]]] = []
+    # chinese -> family_id -> (fine_zh, items)
+    by_chinese: Dict[str, Dict[str, Tuple[str, List[GroupItem]]]] = defaultdict(
+        dict
+    )
     for key, items in groups.items():
         chinese = chinese_for_key(key, zh_map)
-        key_label = format_key_column_label(key, zh_map)
-        keyed_blocks.append((chinese, key, key_label, items))
-
-    keyed_blocks.sort(key=lambda block: (block[0] or "\uffff", block[1]))
+        family_id, fine_zh = key_family(key)
+        if family_id in by_chinese[chinese]:
+            _old_zh, old_items = by_chinese[chinese][family_id]
+            old_items.extend(items)
+        else:
+            by_chinese[chinese][family_id] = (fine_zh, list(items))
 
     rows: List[CellRow] = []
-    for chinese, _key, key_label, items in keyed_blocks:
-        exact_matches, np_only, c1_only = _partition_group(items)
-        for cell in exact_matches:
-            rows.append((chinese, key_label, cell, cell))
-        for cell in np_only:
-            rows.append((chinese, key_label, cell, None))
-        for cell in c1_only:
-            rows.append((chinese, key_label, None, cell))
+    for chinese in sorted(by_chinese.keys(), key=lambda value: value or "\uffff"):
+        families = by_chinese[chinese]
+        sole = len(families) == 1
+        for family_id in sorted(families.keys()):
+            fine_zh, items = families[family_id]
+            key_label = format_family_column_label(family_id, fine_zh, sole)
+            exact_matches, np_only, c1_only = _partition_group(items)
+            for cell in exact_matches:
+                rows.append((chinese, key_label, cell, cell))
+            for cell in np_only:
+                rows.append((chinese, key_label, cell, None))
+            for cell in c1_only:
+                rows.append((chinese, key_label, None, cell))
     return rows
 
 
