@@ -520,10 +520,10 @@ def describe_function_key(  # pylint: disable=too-many-return-statements,too-man
             return "时钟或非门"
         if re.search(r"AN\d", key):
             return "时钟与门"
-        if re.search(r"OR\d", key):
-            return "时钟或门"
         if "XOR" in key:
             return "时钟异或门"
+        if re.search(r"OR\d", key):
+            return "时钟或门"
         if key in ("CKB", "DCCKB") or key.endswith("CKB"):
             return "时钟缓冲/反相"
         if any(token in key for token in ("LNQ", "LHQ", "LNCNQ", "LHCNQ")):
@@ -533,6 +533,10 @@ def describe_function_key(  # pylint: disable=too-many-return-statements,too-man
         if "LH" in key or "LN" in key or "CNQ" in key:
             return "多比特锁存器"
         return "多比特触发器"
+    if key.startswith("SEDF"):
+        return "扫描触发器"
+    if key.startswith("EDF"):
+        return "使能触发器"
     if any(
         key.startswith(prefix)
         for prefix in (
@@ -541,8 +545,6 @@ def describe_function_key(  # pylint: disable=too-many-return-statements,too-man
             "SDF",
             "RSDF",
             "GSDF",
-            "EDF",
-            "SEDF",
             "Y2SDFF",
             "Y3SDFF",
             "Y2SDF",
@@ -608,9 +610,9 @@ def describe_function_key(  # pylint: disable=too-many-return-statements,too-man
     ):
         return "复合逻辑门"
     if re.match(r"^(XOR|XNR|AOI|OAI|ND|NR|AN|OR)\d+", key):
-        rest = re.sub(r"^(XOR|XNR|AOI|OAI|ND|NR|AN|OR)\d+N?\d*", "", key)
+        rest = re.sub(r"^(XOR|XNR|AOI|OAI|ND|NR|AN|OR)\d+", "", key)
         if rest and re.match(
-            r"^(AOI|OAI|XOR|XNR|ND|NR|INV|AN|OR|AO|OA)",
+            r"^(AOI|OAI|XOR|XNR|ND|NR|INV|AN|OR|AO|OA|IOA)",
             rest,
         ):
             return "复合逻辑门"
