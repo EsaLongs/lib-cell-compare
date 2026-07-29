@@ -1,0 +1,585 @@
+# A/B inventory Round2
+# keys=333 A_labels=54
+
+## A=Booth编码器  families=1
+  B='BENC' fine='' cells=4 e.g. ['BENCD1COT', 'BENCD2COT', 'BENCD4COT']
+
+## A=Booth运算单元  families=1
+  B='BML' fine='' cells=3 e.g. ['BMLD1COT', 'BMLD2COT', 'BMLD4COT']
+
+## A=D触发器  families=2
+  B='DF\n标准单元' fine='标准单元' cells=32 e.g. ['DFKRPQD1COT', 'DFKRPQD4COTOPU', 'DFKSNQD0COT']
+  B='GDF\n门阵列ECO' fine='门阵列ECO' cells=3 e.g. ['GDFQD1COT', 'GDFRPQD1COT', 'GDFSNQD1COT']
+
+## A=三态缓冲器  families=1
+  B='BUFT' fine='' cells=1 e.g. ['BUFTD16COT']
+
+## A=上拉/下拉  families=1
+  B='GPULL' fine='' cells=2 e.g. ['GPULL0COT', 'GPULL1COT']
+
+## A=与或门  families=2
+  B='AO\n标准单元' fine='标准单元' cells=28 e.g. ['AO211D0COT', 'AO211D1COT', 'AO211D1COTMDB']
+  B='GAO\n门阵列ECO' fine='门阵列ECO' cells=4 e.g. ['GAO21D1COT', 'GAO22D1COT', 'GAO31D1COT']
+
+## A=与或非门  families=2
+  B='AOI\n标准单元' fine='标准单元' cells=99 e.g. ['AOI2111D1COT', 'AOI2111D1COTA', 'AOI2111D2COT']
+  B='GAOI\n门阵列ECO' fine='门阵列ECO' cells=8 e.g. ['GAOI211D1COT', 'GAOI21D1COT', 'GAOI21D2COT']
+
+## A=与门  families=2
+  B='AN\n标准单元' fine='标准单元' cells=42 e.g. ['AN2D0COT', 'AN2D10COT', 'AN2D12COT']
+  B='GAN\n门阵列ECO' fine='门阵列ECO' cells=4 e.g. ['GAN2D1COT', 'GAN3D1COT', 'GAND3D1COT']
+
+## A=与非门  families=4
+  B='GND\n门阵列ECO' fine='门阵列ECO' cells=5 e.g. ['GNAND2D1COT', 'GND2D2COT', 'GNAND4D1COT']
+  B='IIND\n双输入反相与非' fine='双输入反相与非' cells=6 e.g. ['IIND3D0COT', 'IIND3D1COT', 'IIND3D1COTOPU']
+  B='IND\n单输入反相与非' fine='单输入反相与非' cells=12 e.g. ['IND2D4COTOPTPA', 'IND2D6COTMDB', 'IND2D8COTMDB']
+  B='ND\n标准与非' fine='标准与非' cells=49 e.g. ['ND2D10COT', 'ND2D12COT', 'ND2D16COT']
+
+## A=使能扫描触发器  families=1
+  B='SDFFE' fine='' cells=1 e.g. ['SDFFEACPQX4ASBCOTC']
+
+## A=使能触发器  families=1
+  B='EDF' fine='' cells=4 e.g. ['EDFQD1COT', 'EDFQD2COT', 'EDFRPQD2COTVIA']
+
+## A=全加器  families=1
+  B='FA' fine='' cells=10 e.g. ['FA1D1COTVIAOPTTG', 'FA1D2COTOPTCMDB', 'FA1D4COT']
+
+## A=半加器  families=1
+  B='HA' fine='' cells=13 e.g. ['HA1D1COT', 'HA1D2COT', 'HA1D4COT']
+
+## A=压缩器  families=1
+  B='CMPE' fine='' cells=16 e.g. ['CMPE32D1COTOPTTG', 'CMPE32D1SFCOT', 'CMPE32D2COT']
+
+## A=去耦电容  families=2
+  B='DCAP\n标准单元' fine='标准单元' cells=10 e.g. ['DCAP10COT', 'DCAP16XPCOT', 'DCAP20COT']
+  B='GDCAP\n门阵列ECO' fine='门阵列ECO' cells=11 e.g. ['GDCAP12DHXP', 'GDCAPD12COT', 'GDCAP2SHXP']
+
+## A=反相器  families=3
+  B='APINV\nAP系列' fine='AP系列' cells=1 e.g. ['APINVHDD8COT']
+  B='GINV\n门阵列ECO' fine='门阵列ECO' cells=5 e.g. ['GIND1COT', 'GIND2COT', 'GIND4COT']
+  B='INV\n标准单元' fine='标准单元' cells=1 e.g. ['INVD20COT']
+
+## A=反相多路选择器  families=4
+  B='GMUX2N\n门阵列ECO反相' fine='门阵列ECO反相' cells=1 e.g. ['GMUX2ND1COT']
+  B='MUXI\n标准反相' fine='标准反相' cells=1 e.g. ['MUX2ID2COTVIAMDB']
+  B='MUXN\n标准反相' fine='标准反相' cells=2 e.g. ['MUX3ND1COTOPU', 'MUX4NOPTLD2COT']
+  B='MXI\n标准反相' fine='标准反相' cells=12 e.g. ['MXI2X1ATACOTC', 'MXI2X1ATBCOTC', 'MXI2X2ATACOTC']
+
+## A=同或门  families=2
+  B='GXNR\n门阵列ECO' fine='门阵列ECO' cells=2 e.g. ['GXNOR2D1COT', 'GXNR2D1COT']
+  B='XNR\n标准单元' fine='标准单元' cells=28 e.g. ['XNR2D0COT', 'XNR2D1ARCOTA', 'XNR2D1COTOPP']
+
+## A=同步器  families=1
+  B='SYNLH' fine='' cells=5 e.g. ['SYNLHCNQD1COT', 'SYNLHCNQD1COTM3CEQ', 'SYNLHQD1COT']
+
+## A=同步器触发器  families=1
+  B='SDFSYNC' fine='' cells=2 e.g. ['SDFSYNC1QD1COT', 'SDFSYNC1RPQD1COT']
+
+## A=填充单元  families=2
+  B='FILL\n标准单元' fine='标准单元' cells=18 e.g. ['FILL12COT', 'FILL12VGCOT', 'FILL16COT']
+  B='GFILL\n门阵列ECO' fine='门阵列ECO' cells=38 e.g. ['GFILL11SHCOT', 'GFILLD11COT', 'GFILLD11DCOT']
+
+## A=复合多路选择器  families=1
+  B='MUX2CMP' fine='复合MUX2' cells=14 e.g. ['MUX2AOID1COTA', 'MUX2AOID2COTVIA', 'MUX2ND2CCBD2COT']
+
+## A=复合逻辑门  families=45
+  B='AIOI\n复合·AIOI' fine='复合·AIOI' cells=5 e.g. ['AIOI21D0COT', 'AIOI21D1COT', 'AIOI21D2COT']
+  B='AOAI\n复合·AOAI' fine='复合·AOAI' cells=7 e.g. ['AOAI211D0COT', 'AOAI211D1COT', 'AOAI211D2COT']
+  B='AOIAOI\n复合·AOIAOI' fine='复合·AOIAOI' cells=4 e.g. ['AOI21AOI21CCMD1COT', 'AOI21AOI21CCMD1COTA', 'AOI22AOI21CCMD2COTVIA']
+  B='AOIINV\n复合·AOIINV' fine='复合·AOIINV' cells=4 e.g. ['AOI211INVCCMD1COTVIAG', 'AOI211INVCCMD2COTA', 'AOI22INVCCMD1COTA']
+  B='AOIND\n复合·AOIND' fine='复合·AOIND' cells=9 e.g. ['AOI21ND2CCBD1COT', 'AOI21ND2CCBD1COTA', 'AOI21ND2CCMD1COT']
+  B='AOINR\n复合·AOINR' fine='复合·AOINR' cells=7 e.g. ['AOI21NR2CCBD1COT', 'AOI21NR2CCBD1COTA', 'AOI21NR2CCMD2COTVIA']
+  B='AOIOAI\n复合·AOIOAI' fine='复合·AOIOAI' cells=7 e.g. ['AOI21OAI21CCAD2COT', 'AOI21OAI21CCAD2COTA', 'AOI21OAI21CCMD2COT']
+  B='IAO\n复合·IAO' fine='复合·IAO' cells=10 e.g. ['IAO21D1COT', 'IAO21D2COT', 'IAO21D2COT3FIN']
+  B='IAOI\n复合·IAOI' fine='复合·IAOI' cells=5 e.g. ['IAOI21D1COT', 'IAOI21D1COTOPU', 'IAOI21D2COT']
+  B='INVAAOI\n复合·INVAAOI' fine='复合·INVAAOI' cells=1 e.g. ['INVAAOI21CCBD1COTMVM2OPU']
+  B='INVAOAI\n复合·INVAOAI' fine='复合·INVAOAI' cells=2 e.g. ['INVAOAI21CCBD1COTA', 'INVAOAI21CCBD1COTMVM2OPU']
+  B='INVBAOI\n复合·INVBAOI' fine='复合·INVBAOI' cells=2 e.g. ['INVBAOI21CCBD1COTOPU', 'INVBAOI21CCBD4COTA']
+  B='INVBOAI\n复合·INVBOAI' fine='复合·INVBOAI' cells=2 e.g. ['INVBOAI21CCBD1COT', 'INVBOAI21CCBD1COTA']
+  B='IOA\n复合·IOA' fine='复合·IOA' cells=11 e.g. ['IOA21D0COT', 'IOA21D1COTAROPUEEQ', 'IOA21D2COTVIA']
+  B='IOAI\n复合·IOAI' fine='复合·IOAI' cells=5 e.g. ['IOAI21D1COT', 'IOAI21D2COT', 'IOAI21D4COTVIA']
+  B='MAOI\n复合·MAOI' fine='复合·MAOI' cells=9 e.g. ['MAOI222D1COT', 'MAOI222D2COT', 'MAOI222D2COTVIA']
+  B='MOAI\n复合·MOAI' fine='复合·MOAI' cells=5 e.g. ['MOAI22D0COT', 'MOAI22D1COT', 'MOAI22D1COTVIAMVM2OPU']
+  B='NDAOI\n复合·NDAOI' fine='复合·NDAOI' cells=2 e.g. ['ND2AOI21CCBD1COT', 'ND2AOI21CCBD4COTA']
+  B='NDIOA\n复合·NDIOA' fine='复合·NDIOA' cells=3 e.g. ['ND2IOA21D1COT', 'ND2IOA21D2COTVIA', 'ND2IOA21D4COT']
+  B='NDOAI\n复合·NDOAI' fine='复合·NDOAI' cells=2 e.g. ['ND2OAI21CCBD4COT', 'ND2OAI21CCBD4COTA']
+  B='NRAOI\n复合·NRAOI' fine='复合·NRAOI' cells=2 e.g. ['NR2AOI21CCBD2COT', 'NR2AOI21CCBD4COT']
+  B='NRND\n复合·NRND' fine='复合·NRND' cells=3 e.g. ['NR2ND2D1COT', 'NR2ND2D2COTEEQ', 'NR2ND2D4COT']
+  B='OAIAOI\n复合·OAIAOI' fine='复合·OAIAOI' cells=8 e.g. ['OAI21AOI21CCBD4COTA', 'OAI21AOI22D1COT', 'OAI21AOI22D2COT']
+  B='OAIINV\n复合·OAIINV' fine='复合·OAIINV' cells=3 e.g. ['OAI211INVCCAD1COTVIAG', 'OAI22INVCCAD1COT', 'OAI22INVCCAD1COTA']
+  B='OAIND\n复合·OAIND' fine='复合·OAIND' cells=9 e.g. ['OAI21ND2CCAD1COTA', 'OAI21ND2CCAD1COTVIAG', 'OAI21ND2CCBD4COTA']
+  B='OAINR\n复合·OAINR' fine='复合·OAINR' cells=6 e.g. ['OAI21NR2CCAD1COT', 'OAI21NR2CCAD2COTA', 'OAI21NR2CCBD1COTA']
+  B='OAIOAI\n复合·OAIOAI' fine='复合·OAIOAI' cells=2 e.g. ['OAI21OAI21CCBD4COTA', 'OAI22OAI21CCBD1COTA']
+  B='OAOI\n复合·OAOI' fine='复合·OAOI' cells=3 e.g. ['OAOI211D1COT', 'OAOI211D2COT', 'OAOI211D4COT']
+  B='OIAI\n复合·OIAI' fine='复合·OIAI' cells=5 e.g. ['OIAI21D0COT', 'OIAI21D1COT', 'OIAI21D2COT']
+  B='WANOR\n复合·WANOR' fine='复合·WANOR' cells=1 e.g. ['WAN2OR2COMD1COTA']
+  B='WAO\n复合·WAO' fine='复合·WAO' cells=2 e.g. ['W2AO22D1COT', 'W2AO22D2COT']
+  B='WAOI\n复合·WAOI' fine='复合·WAOI' cells=1 e.g. ['W2AOI22D1COT']
+  B='WAOOA\n复合·WAOOA' fine='复合·WAOOA' cells=2 e.g. ['WAO21OA21COMD1COTA', 'WAO22OA22COMD1COTA']
+  B='XNRAOI\n复合·XNRAOI' fine='复合·XNRAOI' cells=7 e.g. ['XNR2AOI21CCBD4COT', 'XNR2AOI21D1COT', 'XNR2AOI21D1COTA']
+  B='XNRND\n复合·XNRND' fine='复合·XNRND' cells=3 e.g. ['XNR2ND2D1COTA', 'XNR2ND2D1COTMDB', 'XNR2ND2D2COTMDB']
+  B='XNRNR\n复合·XNRNR' fine='复合·XNRNR' cells=2 e.g. ['XNR2NR2D1COTEEQ', 'XNR2NR2D2COT']
+  B='XNROAI\n复合·XNROAI' fine='复合·XNROAI' cells=5 e.g. ['XNR2OAI21CCBD1COT', 'XNR2OAI22D1COT', 'XNR2OAI22D2COTCOT']
+  B='XNRXNR\n复合·XNRXNR' fine='复合·XNRXNR' cells=1 e.g. ['XNR2XNR2D1COT']
+  B='XNRXOR\n复合·XNRXOR' fine='复合·XNRXOR' cells=1 e.g. ['XNR2XOR2D1COT']
+  B='XORAOI\n复合·XORAOI' fine='复合·XORAOI' cells=6 e.g. ['XOR2AOI21CCBD4COT', 'XOR2AOI22D1COTOPTTG', 'XOR2AOI22D2COTOPTTG']
+  B='XORND\n复合·XORND' fine='复合·XORND' cells=4 e.g. ['XOR2ND2D1COT', 'XOR2ND2D1COTA', 'XOR2ND2D2COT']
+  B='XORNR\n复合·XORNR' fine='复合·XORNR' cells=3 e.g. ['XOR2NR2D1COT', 'XOR2NR2D1COTA', 'XOR2NR2D2COT']
+  B='XOROAI\n复合·XOROAI' fine='复合·XOROAI' cells=6 e.g. ['XOR2OAI21CCBD4COT', 'XOR2OAI22D1COTTGOPU', 'XOR2OAI22D2COTOPTTGM3CEQ']
+  B='XORXNR\n复合·XORXNR' fine='复合·XORXNR' cells=1 e.g. ['XOR2XNR2D1COT']
+  B='XORXOR\n复合·XORXOR' fine='复合·XORXOR' cells=1 e.g. ['XOR2XOR2D1COT']
+
+## A=多比特同步器  families=1
+  B='MCE' fine='时钟使能锁存' cells=3 e.g. ['MCESNQSYND1COT', 'MCESNQSYND2COT', 'MCESNQSYND4COT']
+
+## A=多比特触发器  families=1
+  B='MBSDF' fine='' cells=12 e.g. ['MB2SRLSDFKRPQD2COTONEOPU', 'MB2SRLSDFKRPQD2COTSC4LP', 'MB2SRLSDFQD2COTONEOPU']
+
+## A=多比特锁存器  families=2
+  B='MBLAT\n多比特D锁存' fine='多比特D锁存' cells=16 e.g. ['MB2LHCNQD1ARCOT', 'MB2LHCNQD2ARSPCOT', 'MB2LHCNQD4COTVIAOPP']
+  B='MCE\n时钟使能锁存' fine='时钟使能锁存' cells=4 e.g. ['MCECNQD1COT', 'MCESNQD1COT', 'MCESNQD2COT']
+
+## A=多路选择器  families=3
+  B='GMUX\n门阵列ECO' fine='门阵列ECO' cells=1 e.g. ['GMUX2D1COT']
+  B='MUX\n标准单元' fine='标准单元' cells=14 e.g. ['MUX2D1COT', 'MUX2D2COT', 'MUX2D2COT3FIN']
+  B='MX\n标准单元' fine='标准单元' cells=3 e.g. ['MX2X2ATACOTC', 'MX2X2ATFCOTC', 'MX2X8ATACOTC']
+
+## A=天线二极管  families=1
+  B='ANTENNA' fine='' cells=1 e.g. ['ANTENNACOT']
+
+## A=常高/常低单元  families=3
+  B='APTIE\nAP系列' fine='AP系列' cells=2 e.g. ['APTIEHCOT', 'APTIELCOT']
+  B='GTIE\n门阵列ECO' fine='门阵列ECO' cells=2 e.g. ['GTIEHXPCOT', 'GTIELXNCOT']
+  B='TIE\n标准单元' fine='标准单元' cells=2 e.g. ['TIEHXPCOT', 'TIELXNCOT']
+
+## A=延时单元  families=1
+  B='DEL' fine='' cells=12 e.g. ['DELAD1COT', 'DELAEEQMBDD1COT', 'DELBD1COT']
+
+## A=异或门  families=2
+  B='GXOR\n门阵列ECO' fine='门阵列ECO' cells=1 e.g. ['GXOR2D1COT']
+  B='XOR\n标准单元' fine='标准单元' cells=29 e.g. ['XOR2D1COTOPTTGMDB', 'XOR2D2COT', 'XOR2D3COTMDB']
+
+## A=总线保持器  families=1
+  B='BHD' fine='' cells=1 e.g. ['BHDCOT']
+
+## A=或与门  families=2
+  B='GOA\n门阵列ECO' fine='门阵列ECO' cells=4 e.g. ['GOA21D1COT', 'GOA22D1COT', 'GOA31D1COT']
+  B='OA\n标准单元' fine='标准单元' cells=24 e.g. ['OA211D1COT', 'OA211D1COTMVM2OPU', 'OA211D2COTMDB']
+
+## A=或与非门  families=2
+  B='GOAI\n门阵列ECO' fine='门阵列ECO' cells=8 e.g. ['GOAI211D1COT', 'GOAI21D1COT', 'GOAI21D2COT']
+  B='OAI\n标准单元' fine='标准单元' cells=94 e.g. ['OAI2111D1COT', 'OAI2111D2COT', 'OAI211D1COT']
+
+## A=或门  families=2
+  B='GOR\n门阵列ECO' fine='门阵列ECO' cells=3 e.g. ['GOR2D1COT', 'GOR3D1COT', 'GOR4D1COT']
+  B='OR\n标准单元' fine='标准单元' cells=43 e.g. ['OR2D10COTVIA', 'OR2D12COT', 'OR2D16COTOPTHI']
+
+## A=或非门  families=4
+  B='GNR\n门阵列ECO' fine='门阵列ECO' cells=5 e.g. ['GNOR4D1COT', 'GNR4D1COT', 'GNR2D1COT']
+  B='IINR\n双输入反相或非' fine='双输入反相或非' cells=10 e.g. ['IINR3D0COT', 'IINR3D1COT', 'IINR3D1COTOPU']
+  B='INR\n单输入反相或非' fine='单输入反相或非' cells=24 e.g. ['INR2D1COT', 'INR2D1COTOPTPA', 'INR2D2COT']
+  B='NR\n标准或非' fine='标准或非' cells=79 e.g. ['NR2D0COT', 'NR2D10COTSKR', 'NR2D12COT']
+
+## A=扫描触发器  families=2
+  B='SCAN\n非Y扫描' fine='非Y扫描' cells=59 e.g. ['GSDFQD1COTVIA', 'GSDFRPQD1COT', 'GSDFSNQD1COT']
+  B='YSCAN\nY系列' fine='Y系列' cells=11 e.g. ['Y2SDFFQX1COTC', 'Y2SDFQD1COTM3CEQ', 'Y2SDFRPQD1COTM3CEQ']
+
+## A=时钟与门  families=1
+  B='CKAN' fine='' cells=6 e.g. ['CKAN2D1COT', 'CKAN2D2COT', 'CKAN2D4COT']
+
+## A=时钟与非门  families=1
+  B='CKND' fine='' cells=6 e.g. ['CKND2D1COT', 'CKND2D2COT', 'CKND2D4COT']
+
+## A=时钟多路选择器  families=1
+  B='CKMUX' fine='' cells=7 e.g. ['CKMUX2D1COT', 'CKMUX2D2COT', 'CKMUX2D4COT']
+
+## A=时钟异或门  families=1
+  B='CKXOR' fine='' cells=5 e.g. ['CKXOR2D1COT', 'CKXOR2D2COT', 'CKXOR2D4COT']
+
+## A=时钟或门  families=1
+  B='CKOR' fine='' cells=4 e.g. ['CKOR2D1COT', 'CKOR2D2COT', 'CKOR2D4COT']
+
+## A=时钟或非门  families=1
+  B='CKNR' fine='' cells=5 e.g. ['CKNR2D1COT', 'CKNR2D2COT', 'CKNR2D4COT']
+
+## A=时钟缓冲/反相  families=4
+  B='CKB\n时钟缓冲' fine='时钟缓冲' cells=2 e.g. ['CKBD5COT', 'CKBD8COT']
+  B='CKN\n时钟反相' fine='时钟反相' cells=2 e.g. ['CKND24COT', 'CKNTWAD8COT']
+  B='DCCKB\nDC时钟缓冲' fine='DC时钟缓冲' cells=2 e.g. ['DCCKBD10COT', 'DCCKBD16COT']
+  B='DCCKN\nDC时钟反相' fine='DC时钟反相' cells=2 e.g. ['DCCKND12COTDH', 'DCCKND20COT']
+
+## A=焊盘反相器  families=1
+  B='INVPAD' fine='' cells=1 e.g. ['INVPADD1COTOPUEEQ']
+
+## A=特殊全加器  families=2
+  B='FC\n反相进位全加' fine='反相进位全加' cells=9 e.g. ['FCICOD0COT', 'FCICOD2COTMDB', 'FCICOND1COTOPU']
+  B='FI\n进位选择全加' fine='进位选择全加' cells=2 e.g. ['FIICOND1COT', 'FIICOND4COT']
+
+## A=电平转换器  families=5
+  B='CKLVL\n时钟电平转换' fine='时钟电平转换' cells=6 e.g. ['CKLVLLHBUFFSNKD6COT', 'CKLVLLHBUFFSRCD2COT', 'CKLVLLHCHSNKD2COT']
+  B='CKLVU\n时钟电平转换' fine='时钟电平转换' cells=1 e.g. ['CKLVUX6COTC']
+  B='LVLHL\n高转低' fine='高转低' cells=7 e.g. ['LVLHLBUFFSNKCWD2CNWCOT', 'LVLHLBUFFSNKCWD2COT', 'LVLHLBUFFSNKD2COT']
+  B='LVLLH\n低转高' fine='低转高' cells=18 e.g. ['LVLLHBUFFSNKCWBALD4COT', 'LVLLHBUFFSNKCWD4CNWBALCOT', 'LVLLHBUFFSNKD8COTLN']
+  B='LVU\nLVU电平转换' fine='LVU电平转换' cells=17 e.g. ['LVUAN2X2COTC', 'LVUAN2X4COTC', 'LVUFRAN2X2COTC']
+
+## A=缓冲器  families=3
+  B='APBUF\nAP系列' fine='AP系列' cells=2 e.g. ['APBUFHDD1COTVIA', 'APBUFHDX8COT']
+  B='BUF\n标准单元' fine='标准单元' cells=5 e.g. ['BUFFD10COTSKRMDB', 'BUFX16AHBCOT', 'BUFX4ARQCOT']
+  B='GBUFF\n门阵列ECO' fine='门阵列ECO' cells=5 e.g. ['GBUFD1COT', 'GBUFD2COT', 'GBUFD4COT']
+
+## A=边界/版图单元  families=3
+  B='BOUNDARY\n边界单元' fine='边界单元' cells=22 e.g. ['BOUNDARYCNREXRN6COT', 'BOUNDARYCNREXRNCOT', 'BOUNDARYCNREXRPCOT']
+  B='HDDICWY\n版图单元' fine='版图单元' cells=2 e.g. ['HDDICWYX2A20COT', 'HDDICWYX2B30COT']
+  B='HDDID\n版图单元' fine='版图单元' cells=2 e.g. ['HDDID2A30COTARC', 'HDDID2A40COTARC']
+
+## A=锁存器  families=2
+  B='LH\n高电平透明' fine='高电平透明' cells=10 e.g. ['GLAHQD1COT', 'GLAHRNQD1COT', 'GLHCNQD1COT']
+  B='LN\n低电平透明' fine='低电平透明' cells=7 e.g. ['GLNCNQD1COT', 'GLNQD1COT', 'LNCNQD4COT']
+
+## A=门控时钟单元  families=1
+  B='GCKNQ' fine='' cells=3 e.g. ['GCKNQX16ASBCOTC', 'GCKNQX4AHBCOTC', 'GCKNQX8ALPCOTC']
+
+## A=门控时钟锁存器  families=2
+  B='LH\n高电平透明' fine='高电平透明' cells=2 e.g. ['CKLHQD6COTVIA', 'CKLHQTWAD3COT']
+  B='LN\n低电平透明' fine='低电平透明' cells=5 e.g. ['CKLNCNQD14COT', 'CKLNQD14COTOPTBB', 'CKLNQD1MECOT']
+
+## A=阱接触单元  families=1
+  B='TAPCELL' fine='' cells=2 e.g. ['TAPCELLCOT', 'TAPCELLVPPVBBCOT']
+
+## A=隔离单元  families=1
+  B='ISO' fine='' cells=8 e.g. ['ISOCHSNKD1COTVIAG', 'ISOCHSRCD4COT', 'ISOCHSRCIWD2COT']
+
+# KEY map
+AOI21AOI21	A=复合逻辑门	family=AOIAOI	fine=复合·AOIAOI
+AOI21OAI21	A=复合逻辑门	family=AOIOAI	fine=复合·AOIOAI
+AOI22AOI21	A=复合逻辑门	family=AOIAOI	fine=复合·AOIAOI
+AOI22AOI22	A=复合逻辑门	family=AOIAOI	fine=复合·AOIAOI
+AOI22OAI21	A=复合逻辑门	family=AOIOAI	fine=复合·AOIOAI
+MB2LHSPCNQ	A=多比特锁存器	family=MBLAT	fine=多比特D锁存
+MB2LNSPCNQ	A=多比特锁存器	family=MBLAT	fine=多比特D锁存
+OAI21AOI21	A=复合逻辑门	family=OAIAOI	fine=复合·OAIAOI
+OAI21AOI22	A=复合逻辑门	family=OAIAOI	fine=复合·OAIAOI
+OAI21OAI21	A=复合逻辑门	family=OAIOAI	fine=复合·OAIOAI
+OAI22AOI21	A=复合逻辑门	family=OAIAOI	fine=复合·OAIAOI
+OAI22OAI21	A=复合逻辑门	family=OAIOAI	fine=复合·OAIOAI
+AOI211INV	A=复合逻辑门	family=AOIINV	fine=复合·AOIINV
+INVAAOI21	A=复合逻辑门	family=INVAAOI	fine=复合·INVAAOI
+INVAOAI21	A=复合逻辑门	family=INVAOAI	fine=复合·INVAOAI
+INVBAOI21	A=复合逻辑门	family=INVBAOI	fine=复合·INVBAOI
+INVBOAI21	A=复合逻辑门	family=INVBOAI	fine=复合·INVBOAI
+MB2SRLSDF	A=多比特触发器	family=MBSDF	fine=
+MB4SRLSDF	A=多比特触发器	family=MBSDF	fine=
+MCESNQSYN	A=多比特同步器	family=MCE	fine=时钟使能锁存
+OAI211INV	A=复合逻辑门	family=OAIINV	fine=复合·OAIINV
+WAO21OA21	A=复合逻辑门	family=WAOOA	fine=复合·WAOOA
+WAO22OA22	A=复合逻辑门	family=WAOOA	fine=复合·WAOOA
+XNR2AOI21	A=复合逻辑门	family=XNRAOI	fine=复合·XNRAOI
+XNR2AOI22	A=复合逻辑门	family=XNRAOI	fine=复合·XNRAOI
+XNR2OAI21	A=复合逻辑门	family=XNROAI	fine=复合·XNROAI
+XNR2OAI22	A=复合逻辑门	family=XNROAI	fine=复合·XNROAI
+XOR2AOI21	A=复合逻辑门	family=XORAOI	fine=复合·XORAOI
+XOR2AOI22	A=复合逻辑门	family=XORAOI	fine=复合·XORAOI
+XOR2OAI21	A=复合逻辑门	family=XOROAI	fine=复合·XOROAI
+XOR2OAI22	A=复合逻辑门	family=XOROAI	fine=复合·XOROAI
+AOI21ND2	A=复合逻辑门	family=AOIND	fine=复合·AOIND
+AOI21NR2	A=复合逻辑门	family=AOINR	fine=复合·AOINR
+AOI22INV	A=复合逻辑门	family=AOIINV	fine=复合·AOIINV
+AOI22ND2	A=复合逻辑门	family=AOIND	fine=复合·AOIND
+AOI22NR2	A=复合逻辑门	family=AOINR	fine=复合·AOINR
+BOUNDARY	A=边界/版图单元	family=BOUNDARY	fine=边界单元
+MB2LHCNQ	A=多比特锁存器	family=MBLAT	fine=多比特D锁存
+MB2LNCNQ	A=多比特锁存器	family=MBLAT	fine=多比特D锁存
+MUX2NND2	A=复合多路选择器	family=MUX2CMP	fine=复合MUX2
+MUX2NNR2	A=复合多路选择器	family=MUX2CMP	fine=复合MUX2
+ND2AOI21	A=复合逻辑门	family=NDAOI	fine=复合·NDAOI
+ND2IOA21	A=复合逻辑门	family=NDIOA	fine=复合·NDIOA
+ND2OAI21	A=复合逻辑门	family=NDOAI	fine=复合·NDOAI
+NR2AOI21	A=复合逻辑门	family=NRAOI	fine=复合·NRAOI
+OAI21ND2	A=复合逻辑门	family=OAIND	fine=复合·OAIND
+OAI21NR2	A=复合逻辑门	family=OAINR	fine=复合·OAINR
+OAI22INV	A=复合逻辑门	family=OAIINV	fine=复合·OAIINV
+OAI22ND2	A=复合逻辑门	family=OAIND	fine=复合·OAIND
+OAI22NR2	A=复合逻辑门	family=OAINR	fine=复合·OAINR
+SDFSYNC1	A=同步器触发器	family=SDFSYNC	fine=
+SYNLHCNQ	A=同步器	family=SYNLH	fine=
+SYNLHRPQ	A=同步器	family=SYNLH	fine=
+SYNLHSNQ	A=同步器	family=SYNLH	fine=
+XNR2XNR2	A=复合逻辑门	family=XNRXNR	fine=复合·XNRXNR
+XNR2XOR2	A=复合逻辑门	family=XNRXOR	fine=复合·XNRXOR
+XOR2XNR2	A=复合逻辑门	family=XORXNR	fine=复合·XORXNR
+XOR2XOR2	A=复合逻辑门	family=XORXOR	fine=复合·XORXOR
+ANTENNA	A=天线二极管	family=ANTENNA	fine=
+AOAI211	A=复合逻辑门	family=AOAI	fine=复合·AOAI
+AOI2111	A=与或非门	family=AOI	fine=标准单元
+AOI2211	A=与或非门	family=AOI	fine=标准单元
+AOI2221	A=与或非门	family=AOI	fine=标准单元
+AOI2222	A=与或非门	family=AOI	fine=标准单元
+BENCGRF	A=Booth编码器	family=BENC	fine=
+CKLNCNQ	A=门控时钟锁存器	family=LN	fine=低电平透明
+CKLVLLH	A=电平转换器	family=CKLVL	fine=时钟电平转换
+FCSICON	A=特殊全加器	family=FC	fine=反相进位全加
+GAOI211	A=与或非门	family=GAOI	fine=门阵列ECO
+GDCAP10	A=去耦电容	family=GDCAP	fine=门阵列ECO
+GDCAP12	A=去耦电容	family=GDCAP	fine=门阵列ECO
+GFILL10	A=填充单元	family=GFILL	fine=门阵列ECO
+GFILL11	A=填充单元	family=GFILL	fine=门阵列ECO
+GFILL12	A=填充单元	family=GFILL	fine=门阵列ECO
+GLAHRNQ	A=锁存器	family=LH	fine=高电平透明
+GOAI211	A=或与非门	family=GOAI	fine=门阵列ECO
+HDDICWY	A=边界/版图单元	family=HDDICWY	fine=版图单元
+MAOI222	A=复合逻辑门	family=MAOI	fine=复合·MAOI
+MUX2AOI	A=复合多路选择器	family=MUX2CMP	fine=复合MUX2
+MUX2ND2	A=复合多路选择器	family=MUX2CMP	fine=复合MUX2
+MUX2NR2	A=复合多路选择器	family=MUX2CMP	fine=复合MUX2
+OAI2111	A=或与非门	family=OAI	fine=标准单元
+OAI2211	A=或与非门	family=OAI	fine=标准单元
+OAI2221	A=或与非门	family=OAI	fine=标准单元
+OAI2222	A=或与非门	family=OAI	fine=标准单元
+OAOI211	A=复合逻辑门	family=OAOI	fine=复合·OAOI
+TAPCELL	A=阱接触单元	family=TAPCELL	fine=
+W2AOI22	A=复合逻辑门	family=WAOI	fine=复合·WAOI
+WAN2OR2	A=复合逻辑门	family=WANOR	fine=复合·WANOR
+XNR2ND2	A=复合逻辑门	family=XNRND	fine=复合·XNRND
+XNR2NR2	A=复合逻辑门	family=XNRNR	fine=复合·XNRNR
+XOR2ND2	A=复合逻辑门	family=XORND	fine=复合·XORND
+XOR2NR2	A=复合逻辑门	family=XORNR	fine=复合·XORNR
+AIOI21	A=复合逻辑门	family=AIOI	fine=复合·AIOI
+AOI211	A=与或非门	family=AOI	fine=标准单元
+AOI221	A=与或非门	family=AOI	fine=标准单元
+AOI222	A=与或非门	family=AOI	fine=标准单元
+AOI311	A=与或非门	family=AOI	fine=标准单元
+AOI321	A=与或非门	family=AOI	fine=标准单元
+APTIEH	A=常高/常低单元	family=APTIE	fine=AP系列
+APTIEL	A=常高/常低单元	family=APTIE	fine=AP系列
+CKMUX2	A=时钟多路选择器	family=CKMUX	fine=
+CKXOR2	A=时钟异或门	family=CKXOR	fine=
+CMPE32	A=压缩器	family=CMPE	fine=
+CMPE42	A=压缩器	family=CMPE	fine=
+DCAP10	A=去耦电容	family=DCAP	fine=标准单元
+DCAP16	A=去耦电容	family=DCAP	fine=标准单元
+DCAP20	A=去耦电容	family=DCAP	fine=标准单元
+DCAP32	A=去耦电容	family=DCAP	fine=标准单元
+DCAP40	A=去耦电容	family=DCAP	fine=标准单元
+DCAP64	A=去耦电容	family=DCAP	fine=标准单元
+FCICON	A=特殊全加器	family=FC	fine=反相进位全加
+FCONSN	A=特殊全加器	family=FC	fine=反相进位全加
+FIICON	A=特殊全加器	family=FI	fine=进位选择全加
+FILL12	A=填充单元	family=FILL	fine=标准单元
+FILL16	A=填充单元	family=FILL	fine=标准单元
+FILL32	A=填充单元	family=FILL	fine=标准单元
+FILL64	A=填充单元	family=FILL	fine=标准单元
+GAOI21	A=与或非门	family=GAOI	fine=门阵列ECO
+GAOI22	A=与或非门	family=GAOI	fine=门阵列ECO
+GAOI31	A=与或非门	family=GAOI	fine=门阵列ECO
+GAOI32	A=与或非门	family=GAOI	fine=门阵列ECO
+GAOI33	A=与或非门	family=GAOI	fine=门阵列ECO
+GCKLNQ	A=门控时钟锁存器	family=LN	fine=低电平透明
+GDCAP2	A=去耦电容	family=GDCAP	fine=门阵列ECO
+GDCAP4	A=去耦电容	family=GDCAP	fine=门阵列ECO
+GDCAP6	A=去耦电容	family=GDCAP	fine=门阵列ECO
+GDCAP8	A=去耦电容	family=GDCAP	fine=门阵列ECO
+GFILL1	A=填充单元	family=GFILL	fine=门阵列ECO
+GFILL2	A=填充单元	family=GFILL	fine=门阵列ECO
+GFILL3	A=填充单元	family=GFILL	fine=门阵列ECO
+GFILL4	A=填充单元	family=GFILL	fine=门阵列ECO
+GFILL5	A=填充单元	family=GFILL	fine=门阵列ECO
+GFILL6	A=填充单元	family=GFILL	fine=门阵列ECO
+GFILL7	A=填充单元	family=GFILL	fine=门阵列ECO
+GFILL8	A=填充单元	family=GFILL	fine=门阵列ECO
+GFILL9	A=填充单元	family=GFILL	fine=门阵列ECO
+GLHCNQ	A=锁存器	family=LH	fine=高电平透明
+GLNCNQ	A=锁存器	family=LN	fine=低电平透明
+GMUX2N	A=反相多路选择器	family=GMUX2N	fine=门阵列ECO反相
+GOAI21	A=或与非门	family=GOAI	fine=门阵列ECO
+GOAI22	A=或与非门	family=GOAI	fine=门阵列ECO
+GOAI31	A=或与非门	family=GOAI	fine=门阵列ECO
+GOAI32	A=或与非门	family=GOAI	fine=门阵列ECO
+GOAI33	A=或与非门	family=GOAI	fine=门阵列ECO
+GPULL0	A=上拉/下拉	family=GPULL	fine=
+GPULL1	A=上拉/下拉	family=GPULL	fine=
+IAOI21	A=复合逻辑门	family=IAOI	fine=复合·IAOI
+INVPAD	A=焊盘反相器	family=INVPAD	fine=
+IOAI21	A=复合逻辑门	family=IOAI	fine=复合·IOAI
+LHCSNQ	A=锁存器	family=LH	fine=高电平透明
+LNCSNQ	A=锁存器	family=LN	fine=低电平透明
+LVUAN2	A=电平转换器	family=LVU	fine=LVU电平转换
+LVUOR2	A=电平转换器	family=LVU	fine=LVU电平转换
+MAOI22	A=复合逻辑门	family=MAOI	fine=复合·MAOI
+MB2LHQ	A=多比特锁存器	family=MBLAT	fine=多比特D锁存
+MB2LNQ	A=多比特锁存器	family=MBLAT	fine=多比特D锁存
+MB4LHQ	A=多比特锁存器	family=MBLAT	fine=多比特D锁存
+MB4LNQ	A=多比特锁存器	family=MBLAT	fine=多比特D锁存
+MCECNQ	A=多比特锁存器	family=MCE	fine=时钟使能锁存
+MCESNQ	A=多比特锁存器	family=MCE	fine=时钟使能锁存
+MOAI22	A=复合逻辑门	family=MOAI	fine=复合·MOAI
+NR2ND2	A=复合逻辑门	family=NRND	fine=复合·NRND
+OA2222	A=或与门	family=OA	fine=标准单元
+OAI211	A=或与非门	family=OAI	fine=标准单元
+OAI221	A=或与非门	family=OAI	fine=标准单元
+OAI222	A=或与非门	family=OAI	fine=标准单元
+OAI311	A=或与非门	family=OAI	fine=标准单元
+OAI321	A=或与非门	family=OAI	fine=标准单元
+OIAI21	A=复合逻辑门	family=OIAI	fine=复合·OIAI
+SYNLHQ	A=同步器	family=SYNLH	fine=
+W2AO22	A=复合逻辑门	family=WAO	fine=复合·WAO
+Y2SDFF	A=扫描触发器	family=YSCAN	fine=Y系列
+Y3SDFF	A=扫描触发器	family=YSCAN	fine=Y系列
+AO211	A=与或门	family=AO	fine=标准单元
+AO222	A=与或门	family=AO	fine=标准单元
+AOI21	A=与或非门	family=AOI	fine=标准单元
+AOI22	A=与或非门	family=AOI	fine=标准单元
+AOI31	A=与或非门	family=AOI	fine=标准单元
+AOI32	A=与或非门	family=AOI	fine=标准单元
+AOI33	A=与或非门	family=AOI	fine=标准单元
+APBUF	A=缓冲器	family=APBUF	fine=AP系列
+APINV	A=反相器	family=APINV	fine=AP系列
+CKAN2	A=时钟与门	family=CKAN	fine=
+CKLHQ	A=门控时钟锁存器	family=LH	fine=高电平透明
+CKLNQ	A=门控时钟锁存器	family=LN	fine=低电平透明
+CKLVU	A=电平转换器	family=CKLVU	fine=时钟电平转换
+CKND2	A=时钟与非门	family=CKND	fine=
+CKNR2	A=时钟或非门	family=CKNR	fine=
+CKOR2	A=时钟或门	family=CKOR	fine=
+DCAP4	A=去耦电容	family=DCAP	fine=标准单元
+DCAP5	A=去耦电容	family=DCAP	fine=标准单元
+DCAP8	A=去耦电容	family=DCAP	fine=标准单元
+DCCKB	A=时钟缓冲/反相	family=DCCKB	fine=DC时钟缓冲
+DCCKN	A=时钟缓冲/反相	family=DCCKN	fine=DC时钟反相
+FCICO	A=特殊全加器	family=FC	fine=反相进位全加
+FCISN	A=特殊全加器	family=FC	fine=反相进位全加
+FILL1	A=填充单元	family=FILL	fine=标准单元
+FILL2	A=填充单元	family=FILL	fine=标准单元
+FILL3	A=填充单元	family=FILL	fine=标准单元
+FILL4	A=填充单元	family=FILL	fine=标准单元
+FILL8	A=填充单元	family=FILL	fine=标准单元
+GAO21	A=与或门	family=GAO	fine=门阵列ECO
+GAO22	A=与或门	family=GAO	fine=门阵列ECO
+GAO31	A=与或门	family=GAO	fine=门阵列ECO
+GAO32	A=与或门	family=GAO	fine=门阵列ECO
+GBUFF	A=缓冲器	family=GBUFF	fine=门阵列ECO
+GCKNQ	A=门控时钟单元	family=GCKNQ	fine=
+GLAHQ	A=锁存器	family=LH	fine=高电平透明
+GMUX2	A=多路选择器	family=GMUX	fine=门阵列ECO
+GOA21	A=或与门	family=GOA	fine=门阵列ECO
+GOA22	A=或与门	family=GOA	fine=门阵列ECO
+GOA31	A=或与门	family=GOA	fine=门阵列ECO
+GOA32	A=或与门	family=GOA	fine=门阵列ECO
+GTIEH	A=常高/常低单元	family=GTIE	fine=门阵列ECO
+GTIEL	A=常高/常低单元	family=GTIE	fine=门阵列ECO
+GXNR2	A=同或门	family=GXNR	fine=门阵列ECO
+GXOR2	A=异或门	family=GXOR	fine=门阵列ECO
+HDDID	A=边界/版图单元	family=HDDID	fine=版图单元
+IAO21	A=复合逻辑门	family=IAO	fine=复合·IAO
+IAO22	A=复合逻辑门	family=IAO	fine=复合·IAO
+IIND3	A=与非门	family=IIND	fine=双输入反相与非
+IIND4	A=与非门	family=IIND	fine=双输入反相与非
+IINR3	A=或非门	family=IINR	fine=双输入反相或非
+IINR4	A=或非门	family=IINR	fine=双输入反相或非
+IOA21	A=复合逻辑门	family=IOA	fine=复合·IOA
+IOA22	A=复合逻辑门	family=IOA	fine=复合·IOA
+LHCNQ	A=锁存器	family=LH	fine=高电平透明
+LHSNQ	A=锁存器	family=LH	fine=高电平透明
+LNCNQ	A=锁存器	family=LN	fine=低电平透明
+LNSNQ	A=锁存器	family=LN	fine=低电平透明
+LVLHL	A=电平转换器	family=LVLHL	fine=高转低
+LVLLH	A=电平转换器	family=LVLLH	fine=低转高
+MUX2I	A=反相多路选择器	family=MUXI	fine=标准反相
+MUX3N	A=反相多路选择器	family=MUXN	fine=标准反相
+MUX4N	A=反相多路选择器	family=MUXN	fine=标准反相
+OA211	A=或与门	family=OA	fine=标准单元
+OA222	A=或与门	family=OA	fine=标准单元
+OAI21	A=或与非门	family=OAI	fine=标准单元
+OAI22	A=或与非门	family=OAI	fine=标准单元
+OAI31	A=或与非门	family=OAI	fine=标准单元
+OAI32	A=或与非门	family=OAI	fine=标准单元
+OAI33	A=或与非门	family=OAI	fine=标准单元
+SD2FF	A=扫描触发器	family=SCAN	fine=非Y扫描
+SDFFE	A=使能扫描触发器	family=SDFFE	fine=
+Y2SDF	A=扫描触发器	family=YSCAN	fine=Y系列
+Y3SDF	A=扫描触发器	family=YSCAN	fine=Y系列
+AO21	A=与或门	family=AO	fine=标准单元
+AO22	A=与或门	family=AO	fine=标准单元
+AO33	A=与或门	family=AO	fine=标准单元
+BENC	A=Booth编码器	family=BENC	fine=
+BUFT	A=三态缓冲器	family=BUFT	fine=
+DELA	A=延时单元	family=DEL	fine=
+DELB	A=延时单元	family=DEL	fine=
+DELC	A=延时单元	family=DEL	fine=
+DELD	A=延时单元	family=DEL	fine=
+DELE	A=延时单元	family=DEL	fine=
+DELF	A=延时单元	family=DEL	fine=
+DELG	A=延时单元	family=DEL	fine=
+FCIS	A=特殊全加器	family=FC	fine=反相进位全加
+GAN2	A=与门	family=GAN	fine=门阵列ECO
+GAN3	A=与门	family=GAN	fine=门阵列ECO
+GAN4	A=与门	family=GAN	fine=门阵列ECO
+GINV	A=反相器	family=GINV	fine=门阵列ECO
+GLHQ	A=锁存器	family=LH	fine=高电平透明
+GLNQ	A=锁存器	family=LN	fine=低电平透明
+GND2	A=与非门	family=GND	fine=门阵列ECO
+GND3	A=与非门	family=GND	fine=门阵列ECO
+GND4	A=与非门	family=GND	fine=门阵列ECO
+GNR2	A=或非门	family=GNR	fine=门阵列ECO
+GNR3	A=或非门	family=GNR	fine=门阵列ECO
+GNR4	A=或非门	family=GNR	fine=门阵列ECO
+GOR2	A=或门	family=GOR	fine=门阵列ECO
+GOR3	A=或门	family=GOR	fine=门阵列ECO
+GOR4	A=或门	family=GOR	fine=门阵列ECO
+GSDF	A=扫描触发器	family=SCAN	fine=非Y扫描
+HAC1	A=半加器	family=HA	fine=
+HAN1	A=半加器	family=HA	fine=
+IND2	A=与非门	family=IND	fine=单输入反相与非
+IND3	A=与非门	family=IND	fine=单输入反相与非
+IND4	A=与非门	family=IND	fine=单输入反相与非
+INR2	A=或非门	family=INR	fine=单输入反相或非
+INR3	A=或非门	family=INR	fine=单输入反相或非
+INR4	A=或非门	family=INR	fine=单输入反相或非
+ISOH	A=隔离单元	family=ISO	fine=
+ISOL	A=隔离单元	family=ISO	fine=
+MUX2	A=多路选择器	family=MUX	fine=标准单元
+MUX3	A=多路选择器	family=MUX	fine=标准单元
+MUX4	A=多路选择器	family=MUX	fine=标准单元
+MUX8	A=多路选择器	family=MUX	fine=标准单元
+MXI2	A=反相多路选择器	family=MXI	fine=标准反相
+OA21	A=或与门	family=OA	fine=标准单元
+OA22	A=或与门	family=OA	fine=标准单元
+RSDF	A=扫描触发器	family=SCAN	fine=非Y扫描
+SDFF	A=扫描触发器	family=SCAN	fine=非Y扫描
+SEDF	A=扫描触发器	family=SCAN	fine=非Y扫描
+TIEH	A=常高/常低单元	family=TIE	fine=标准单元
+TIEL	A=常高/常低单元	family=TIE	fine=标准单元
+XNR2	A=同或门	family=XNR	fine=标准单元
+XNR3	A=同或门	family=XNR	fine=标准单元
+XNR4	A=同或门	family=XNR	fine=标准单元
+XOR2	A=异或门	family=XOR	fine=标准单元
+XOR3	A=异或门	family=XOR	fine=标准单元
+XOR4	A=异或门	family=XOR	fine=标准单元
+YSDF	A=扫描触发器	family=YSCAN	fine=Y系列
+AN2	A=与门	family=AN	fine=标准单元
+AN3	A=与门	family=AN	fine=标准单元
+AN4	A=与门	family=AN	fine=标准单元
+BHD	A=总线保持器	family=BHD	fine=
+BML	A=Booth运算单元	family=BML	fine=
+BUF	A=缓冲器	family=BUF	fine=标准单元
+CKB	A=时钟缓冲/反相	family=CKB	fine=时钟缓冲
+CKN	A=时钟缓冲/反相	family=CKN	fine=时钟反相
+EDF	A=使能触发器	family=EDF	fine=
+FA1	A=全加器	family=FA	fine=
+GDF	A=D触发器	family=GDF	fine=门阵列ECO
+HA1	A=半加器	family=HA	fine=
+INV	A=反相器	family=INV	fine=标准单元
+LHQ	A=锁存器	family=LH	fine=高电平透明
+LNQ	A=锁存器	family=LN	fine=低电平透明
+LVU	A=电平转换器	family=LVU	fine=LVU电平转换
+MX2	A=多路选择器	family=MX	fine=标准单元
+ND2	A=与非门	family=ND	fine=标准与非
+ND3	A=与非门	family=ND	fine=标准与非
+ND4	A=与非门	family=ND	fine=标准与非
+NR2	A=或非门	family=NR	fine=标准或非
+NR3	A=或非门	family=NR	fine=标准或非
+NR4	A=或非门	family=NR	fine=标准或非
+OR2	A=或门	family=OR	fine=标准单元
+OR3	A=或门	family=OR	fine=标准单元
+OR4	A=或门	family=OR	fine=标准单元
+SDF	A=扫描触发器	family=SCAN	fine=非Y扫描
+DF	A=D触发器	family=DF	fine=标准单元
