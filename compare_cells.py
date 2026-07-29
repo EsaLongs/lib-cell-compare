@@ -497,7 +497,9 @@ def describe_function_key(  # pylint: disable=too-many-return-statements,too-man
         return "延时单元"
     if "PULL" in key:
         return "上拉/下拉"
-    if key.startswith(("ISO", "LVL", "LVU", "CKLVL", "CKLV")):
+    if key.startswith("ISO"):
+        return "隔离单元"
+    if key.startswith(("LVL", "LVU", "CKLVL", "CKLV")):
         return "电平转换器"
     if key.startswith("SYN"):
         return "同步器"
