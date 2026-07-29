@@ -209,10 +209,6 @@ GAO31	与或门
 GAO32	与或门
 GBUFF	缓冲器
 GCKNQ	门控时钟
-GIND1	与非门
-GIND2	与非门
-GIND4	与非门
-GIND8	与非门
 GLAHQ	锁存器
 GMUX2	多路选择器
 GOA21	或与门

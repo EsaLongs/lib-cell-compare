@@ -361,6 +361,10 @@ def _normalize_function_aliases(name: str) -> str:
         name = "BUF"
     if name == "GBUF":
         name = "GBUFF"
+    # GIND1/2/4/8 are G-inverter + drive (GIN+D), not multi-input NAND.
+    # NP1PP names the same family GINV.
+    if re.fullmatch(r"GIND\d+(?:P\d+)?", name):
+        name = "GINV"
     # Cross-library spelling aliases (C1Y full / NP1PP short).
     if name.startswith("GNAND"):
         name = "GND" + name[5:]
@@ -398,11 +402,11 @@ def extract_function_root(name: str) -> str:
     """Extract a logic-function root from a full cell name."""
     value = COT_AND_AFTER_RE.sub("", name)
     value = _cut_process_tail(value)
-    # C1Y FILL/DCAP sizes use D<n>; normalize before drive peel.
-    value = _normalize_fill_dcap_size(value)
     while True:
         value = _peel_trailing_tags(value)
         value = _peel_variant_suffixes(value)
+        # After tags (SH/DH/...), map GFILLD12 / GDCAPD10 / GFILLD2D.
+        value = _normalize_fill_dcap_size(value)
         if _should_stop_drive_peel(value):
             break
         match = DRIVE_RE.search(value)
@@ -411,6 +415,7 @@ def extract_function_root(name: str) -> str:
         value = value[: match.start()]
     value = _peel_trailing_tags(value)
     value = _peel_variant_suffixes(value)
+    value = _normalize_fill_dcap_size(value)
     value = _collapse_ff_tail(value)
     value = _normalize_layout_family(value)
     return _normalize_function_aliases(value)
