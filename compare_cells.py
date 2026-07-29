@@ -149,6 +149,9 @@ VARIANT_SUFFIX_RE = re.compile(
     r"(?:CCB|CCM|CCA|SNK|SRC|CW|CWBAL|CWRB|BALRB|BAL|DBA4|NOBCM|"
     r"TGAR|XNRAR|ARSP|VPPVBB|IW|V2|COM)$"
 )
+# Device/ratio variants after topology digits, e.g. AOI21B1 / AOI21N2 / ND2N1.
+# Require a preceding digit so AN2 / GAN2 are not peeled.
+BN_VARIANT_RE = re.compile(r"(?<=\d)[BN]\d$")
 # "HD" layout marker; keep short roots like BHD (stem shorter than 4).
 HD_SUFFIX_MIN_STEM = 4
 COT_AND_AFTER_RE = re.compile(r"COT.*$")
@@ -416,7 +419,7 @@ def _peel_trailing_tags(name: str) -> str:
 
 
 def _peel_variant_suffixes(name: str) -> str:
-    """Peel known non-drive variant suffixes (CCA/CCB/SNK/HD/...)."""
+    """Peel known non-drive variant suffixes (CCA/CCB/SNK/HD/B1/N2/...)."""
     while True:
         match = VARIANT_SUFFIX_RE.search(name)
         if match is not None:
@@ -424,6 +427,10 @@ def _peel_variant_suffixes(name: str) -> str:
             continue
         if name.endswith("HD") and len(name) - 2 >= HD_SUFFIX_MIN_STEM:
             name = name[:-2]
+            continue
+        match = BN_VARIANT_RE.search(name)
+        if match is not None:
+            name = name[: match.start()]
             continue
         break
     return name
