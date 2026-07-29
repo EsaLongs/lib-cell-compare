@@ -245,7 +245,7 @@ GPULL0	上拉/下拉
 IAOI21	复合逻辑门
 INVPAD	焊盘反相器
 IOAI21	复合逻辑门
-ISOHFR	电平转换器
+ISOHFR	隔离单元
 LHCSNQ	锁存器
 LNCSNQ	锁存器
 LVUAN2	电平转换器
@@ -326,8 +326,8 @@ IINR3	或非门
 IINR4	或非门
 IOA21	复合逻辑门
 IOA22	复合逻辑门
-ISOCH	电平转换器
-ISOCL	电平转换器
+ISOCH	隔离单元
+ISOCL	隔离单元
 LHCNQ	锁存器
 LHSNQ	锁存器
 LNCNQ	锁存器
@@ -391,8 +391,8 @@ IND4	与非门
 INR2	或非门
 INR3	或非门
 INR4	或非门
-ISOH	电平转换器
-ISOL	电平转换器
+ISOH	隔离单元
+ISOL	隔离单元
 MUX2	多路选择器
 MUX3	多路选择器
 MUX4	多路选择器
