@@ -245,6 +245,13 @@ KEY_FAMILY_RULES: Tuple[Tuple[Pattern[str], str, str], ...] = (
     # MB* = multi-bit D latch (VeriSilicon MBLAT); MCE* = clock-enable latch.
     (re.compile(r"^MB\d+"), "MBLAT", "多比特D锁存"),
     (re.compile(r"^MCE"), "MCE", "时钟使能锁存"),
+    # Level shifters BEFORE LH/LN: names like LVLLH/LVLHL contain LH/HL.
+    (re.compile(r"^CKLVL"), "CKLVL", "时钟电平转换"),
+    (re.compile(r"^CKLVU"), "CKLVU", "时钟电平转换"),
+    (re.compile(r"^LVU"), "LVU", "LVU电平转换"),
+    (re.compile(r"^LVLHL"), "LVLHL", "高转低"),
+    (re.compile(r"^LVLLH"), "LVLLH", "低转高"),
+    (re.compile(r"^LVL"), "LVL", "LVL电平转换"),
     # Latches (incl. clock latches): only LH vs LN; LAH counted as high.
     (re.compile(r"LN"), "LN", "低电平透明"),
     (re.compile(r"LH|LAH"), "LH", "高电平透明"),
@@ -256,17 +263,14 @@ KEY_FAMILY_RULES: Tuple[Tuple[Pattern[str], str, str], ...] = (
         "非Y扫描",
     ),
     (re.compile(r"^DCCKB$"), "DCCKB", "DC时钟缓冲"),
+    (re.compile(r"^DCCKN$"), "DCCKN", "DC时钟反相"),
     (re.compile(r"^CKB$"), "CKB", "时钟缓冲"),
     (re.compile(r"^CKN$"), "CKN", "时钟反相"),
-    (re.compile(r"^CKLVL"), "CKLVL", "时钟域"),
-    (re.compile(r"^CKLVU"), "CKLVU", "时钟域"),
-    (re.compile(r"^LVU"), "LVU", "LVU系列"),
-    (re.compile(r"^LVL"), "LVL", "LVL系列"),
     (re.compile(r"^BOUNDARY$"), "BOUNDARY", "BOUNDARY"),
     (re.compile(r"^HDDICWY$"), "HDDICWY", "HDDICWY"),
     (re.compile(r"^HDDID$"), "HDDID", "HDDID"),
-    # Special datapath FA (TCBN): FC* carry-chain / FI* carry-out select (FIICON).
-    (re.compile(r"^FC"), "FC", "进位链全加"),
+    # Special datapath FA (TCBN): FC* inverting-carry / FIICON carry-out select.
+    (re.compile(r"^FC"), "FC", "反相进位全加"),
     (re.compile(r"^FI"), "FI", "进位选择全加"),
 )
 

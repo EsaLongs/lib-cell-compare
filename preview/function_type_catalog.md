@@ -1,10 +1,7 @@
 # Function type catalog
 
-- cells: 1330
-- keys: 333
-
 | KEY | 中文 |
-|-----|------|
+|---|---|
 | AOI21AOI21 | 复合逻辑门 |
 | AOI21OAI21 | 复合逻辑门 |
 | AOI22AOI21 | 复合逻辑门 |
@@ -55,7 +52,7 @@
 | OAI22INV | 复合逻辑门 |
 | OAI22ND2 | 复合逻辑门 |
 | OAI22NR2 | 复合逻辑门 |
-| SDFSYNC1 | 同步触发器 |
+| SDFSYNC1 | 同步器触发器 |
 | SYNLHCNQ | 同步器 |
 | SYNLHRPQ | 同步器 |
 | SYNLHSNQ | 同步器 |
@@ -69,10 +66,10 @@
 | AOI2211 | 与或非门 |
 | AOI2221 | 与或非门 |
 | AOI2222 | 与或非门 |
-| BENCGRF | 编码器 |
-| CKLNCNQ | 时钟锁存器 |
+| BENCGRF | Booth编码器 |
+| CKLNCNQ | 门控时钟锁存器 |
 | CKLVLLH | 电平转换器 |
-| FCSICON | 进位逻辑 |
+| FCSICON | 特殊全加器 |
 | GAOI211 | 与或非门 |
 | GDCAP10 | 去耦电容 |
 | GDCAP12 | 去耦电容 |
@@ -91,7 +88,7 @@
 | OAI2221 | 或与非门 |
 | OAI2222 | 或与非门 |
 | OAOI211 | 复合逻辑门 |
-| TAPCELL | 阱敲击单元 |
+| TAPCELL | 阱接触单元 |
 | W2AOI22 | 复合逻辑门 |
 | WAN2OR2 | 复合逻辑门 |
 | XNR2ND2 | 复合逻辑门 |
@@ -104,8 +101,8 @@
 | AOI222 | 与或非门 |
 | AOI311 | 与或非门 |
 | AOI321 | 与或非门 |
-| APTIEH | 电平钳位 |
-| APTIEL | 电平钳位 |
+| APTIEH | 常高/常低单元 |
+| APTIEL | 常高/常低单元 |
 | CKMUX2 | 时钟多路选择器 |
 | CKXOR2 | 时钟异或门 |
 | CMPE32 | 压缩器 |
@@ -116,9 +113,9 @@
 | DCAP32 | 去耦电容 |
 | DCAP40 | 去耦电容 |
 | DCAP64 | 去耦电容 |
-| FCICON | 进位逻辑 |
-| FCONSN | 进位逻辑 |
-| FIICON | 进位逻辑 |
+| FCICON | 特殊全加器 |
+| FCONSN | 特殊全加器 |
+| FIICON | 特殊全加器 |
 | FILL12 | 填充单元 |
 | FILL16 | 填充单元 |
 | FILL32 | 填充单元 |
@@ -128,7 +125,7 @@
 | GAOI31 | 与或非门 |
 | GAOI32 | 与或非门 |
 | GAOI33 | 与或非门 |
-| GCKLNQ | 时钟锁存器 |
+| GCKLNQ | 门控时钟锁存器 |
 | GDCAP2 | 去耦电容 |
 | GDCAP4 | 去耦电容 |
 | GDCAP6 | 去耦电容 |
@@ -189,8 +186,8 @@
 | APBUF | 缓冲器 |
 | APINV | 反相器 |
 | CKAN2 | 时钟与门 |
-| CKLHQ | 时钟锁存器 |
-| CKLNQ | 时钟锁存器 |
+| CKLHQ | 门控时钟锁存器 |
+| CKLNQ | 门控时钟锁存器 |
 | CKLVU | 电平转换器 |
 | CKND2 | 时钟与非门 |
 | CKNR2 | 时钟或非门 |
@@ -199,9 +196,9 @@
 | DCAP5 | 去耦电容 |
 | DCAP8 | 去耦电容 |
 | DCCKB | 时钟缓冲/反相 |
-| DCCKN | 时钟单元 |
-| FCICO | 进位逻辑 |
-| FCISN | 进位逻辑 |
+| DCCKN | 时钟缓冲/反相 |
+| FCICO | 特殊全加器 |
+| FCISN | 特殊全加器 |
 | FILL1 | 填充单元 |
 | FILL2 | 填充单元 |
 | FILL3 | 填充单元 |
@@ -212,15 +209,15 @@
 | GAO31 | 与或门 |
 | GAO32 | 与或门 |
 | GBUFF | 缓冲器 |
-| GCKNQ | 门控时钟 |
+| GCKNQ | 门控时钟单元 |
 | GLAHQ | 锁存器 |
 | GMUX2 | 多路选择器 |
 | GOA21 | 或与门 |
 | GOA22 | 或与门 |
 | GOA31 | 或与门 |
 | GOA32 | 或与门 |
-| GTIEH | 电平钳位 |
-| GTIEL | 电平钳位 |
+| GTIEH | 常高/常低单元 |
+| GTIEL | 常高/常低单元 |
 | GXNR2 | 同或门 |
 | GXOR2 | 异或门 |
 | HDDID | 边界/版图单元 |
@@ -255,7 +252,7 @@
 | AO21 | 与或门 |
 | AO22 | 与或门 |
 | AO33 | 与或门 |
-| BENC | 编码器 |
+| BENC | Booth编码器 |
 | BUFT | 三态缓冲器 |
 | DELA | 延时单元 |
 | DELB | 延时单元 |
@@ -264,7 +261,7 @@
 | DELE | 延时单元 |
 | DELF | 延时单元 |
 | DELG | 延时单元 |
-| FCIS | 进位逻辑 |
+| FCIS | 特殊全加器 |
 | GAN2 | 与门 |
 | GAN3 | 与门 |
 | GAN4 | 与门 |
@@ -301,8 +298,8 @@
 | RSDF | 扫描触发器 |
 | SDFF | 扫描触发器 |
 | SEDF | 扫描触发器 |
-| TIEH | 电平钳位 |
-| TIEL | 电平钳位 |
+| TIEH | 常高/常低单元 |
+| TIEL | 常高/常低单元 |
 | XNR2 | 同或门 |
 | XNR3 | 同或门 |
 | XNR4 | 同或门 |
@@ -314,7 +311,7 @@
 | AN3 | 与门 |
 | AN4 | 与门 |
 | BHD | 总线保持器 |
-| BML | 辅助单元 |
+| BML | Booth运算单元 |
 | BUF | 缓冲器 |
 | CKB | 时钟缓冲/反相 |
 | CKN | 时钟缓冲/反相 |
