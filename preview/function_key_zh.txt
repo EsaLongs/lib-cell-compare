@@ -36,6 +36,7 @@ AOI22NR2	复合逻辑门
 BOUNDARY	边界/版图单元
 MB2LHCNQ	多比特锁存器
 MB2LNCNQ	多比特锁存器
+MUX2NND2	复合多路选择器
 MUX2NNR2	复合多路选择器
 ND2AOI21	复合逻辑门
 ND2IOA21	复合逻辑门
@@ -146,7 +147,6 @@ MB4LHQ	多比特锁存器
 MB4LNQ	多比特锁存器
 MCECNQ	多比特锁存器
 MOAI22	复合逻辑门
-MUX2NN	多路选择器
 NR2ND2	复合逻辑门
 OA2222	或与门
 OAI211	或与非门
