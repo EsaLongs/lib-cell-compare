@@ -35,7 +35,6 @@ AOI21OAI21	复合逻辑门
 AOI22AOI21	复合逻辑门
 AOI22AOI22	复合逻辑门
 AOI22OAI21	复合逻辑门
-LVUFROR2N1	电平转换器
 MB2LHSPCNQ	多比特锁存器
 MB2LNSPCNQ	多比特锁存器
 MB2SRLSDFQ	多比特触发器
@@ -96,7 +95,7 @@ FIICOND1	进位逻辑
 FIICOND4	进位逻辑
 GMUX2ND1	复合多路选择器
 LVUFRAN2	电平转换器
-LVUOR2N1	电平转换器
+LVUFROR2	电平转换器
 MB2LHCNQ	多比特锁存器
 MB2LNCNQ	多比特锁存器
 MUX2NND2	复合多路选择器
@@ -129,8 +128,6 @@ Y3SDFSNQ	扫描触发器
 ANTENNA	天线二极管
 AOAI211	复合逻辑门
 AOI2111	与或非门
-AOI21B1	与或非门
-AOI21N2	与或非门
 AOI2211	与或非门
 AOI2221	与或非门
 AOI2222	与或非门
@@ -161,7 +158,6 @@ MUX2ND2	复合多路选择器
 MUX2NR2	复合多路选择器
 MUX3ND1	复合多路选择器
 OAI2111	或与非门
-OAI21N2	或与非门
 OAI2211	或与非门
 OAI2221	或与非门
 OAI2222	或与非门
@@ -249,6 +245,7 @@ ISOHFR	隔离单元
 LHCSNQ	锁存器
 LNCSNQ	锁存器
 LVUAN2	电平转换器
+LVUOR2	电平转换器
 MAOI22	复合逻辑门
 MB2LHQ	多比特锁存器
 MB2LNQ	多比特锁存器
@@ -334,11 +331,6 @@ LNCNQ	锁存器
 LNSNQ	锁存器
 MUX2I	反相多路选择器
 MUX4N	反相多路选择器
-ND2N1	与非门
-ND3N1	与非门
-ND3N2	与非门
-ND4N1	与非门
-NR2N1	或非门
 OA211	或与门
 OA222	或与门
 OAI21	或与非门
