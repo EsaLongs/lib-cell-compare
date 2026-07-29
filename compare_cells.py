@@ -128,12 +128,14 @@ TRAILING_TAG_RE = re.compile(
 )
 DRIVE_RE = re.compile(r"[DX]\d+(?:P\d+)?$")
 # Whole-name roots that still end with D\d+/X\d+ and must not peel.
+# Protect single-digit topologies only (ND2/NR2/...), so CKND24 peels as
+# CKN+D24 (clock inverter drive) instead of a fake 24-input NAND.
 PROTECTED_WHOLE_RE = re.compile(
     r"(?:"
-    r"(?:CK|G)?(?:ND|NR|IND|INR|IIND|IINR|GND|GNR|GNAND|GNOR)\d+|"
-    r"(?:G)?AND\d+|"
-    r"(?:CK|G)?MUX\d+|"
-    r"MX\d+"
+    r"(?:CK|G)?(?:ND|NR|IND|INR|IIND|IINR|GND|GNR|GNAND|GNOR)\d|"
+    r"(?:G)?AND\d|"
+    r"(?:CK|G)?MUX\d|"
+    r"MX\d"
     r")$"
 )
 # Real compound *ND2+/*NR2+ (optional extra N: MUX2NND2); not ND1 drive.
@@ -163,10 +165,12 @@ FF_STEMS = (
     "Y3SDF",
     "Y2SDF",
     "YSDF",
+    "SDFSYNC1",
     "SEDF",
     "RSDF",
     "GSDF",
     "SD2FF",
+    "SDFFE",
     "SDFF",
     "SDF",
     "GDF",
@@ -343,6 +347,13 @@ def _normalize_function_aliases(name: str) -> str:
         name = name[:-4]
     if name == "BUFF":
         name = "BUF"
+    # Cross-library spelling aliases (C1Y full / NP1PP short).
+    if name.startswith("GNAND"):
+        name = "GND" + name[5:]
+    elif name.startswith("GAND"):
+        name = "GAN" + name[4:]
+    if name.startswith("GNOR"):
+        name = "GNR" + name[4:]
     return name
 
 
@@ -387,29 +398,40 @@ def extract_function_root(name: str) -> str:
     return _normalize_function_aliases(value)
 
 
+def _prefix_key_matches(
+    value: str,
+    key: str,
+    layout_families: Set[str],
+) -> bool:
+    """True if key is a qualified prefix of value (digit-boundary aware)."""
+    if not value.startswith(key):
+        return False
+    rest = value[len(key) :]
+    if rest and rest[0].isdigit() and key not in layout_families:
+        return False
+    return True
+
+
 def match_function_key(
     name: str,
     function_keys: Sequence[str],
 ) -> Optional[str]:
     """Return the first matching function key for name, else None.
 
-    Prefer extract_function_root when it appears in the key list. Otherwise
-    fall back to ordered prefix match: earlier keys win; a digit right after
-    the key blocks the match except for layout family keys.
+    Walk keys in table order. At each key, accept either an exact
+    extract_function_root hit or a qualified prefix of the original name or
+    root (so aliases like ISOCH→ISOH still match, without root bypassing
+    longer keys listed earlier).
     """
     root = extract_function_root(name)
-    key_set = set(function_keys)
-    if root in key_set:
-        return root
-
     layout_families = set(LAYOUT_FAMILY_PREFIXES)
     for key in function_keys:
-        if not name.startswith(key):
-            continue
-        rest = name[len(key) :]
-        if rest and rest[0].isdigit() and key not in layout_families:
-            continue
-        return key
+        if key == root:
+            return key
+        if _prefix_key_matches(name, key, layout_families):
+            return key
+        if root != name and _prefix_key_matches(root, key, layout_families):
+            return key
     return None
 
 

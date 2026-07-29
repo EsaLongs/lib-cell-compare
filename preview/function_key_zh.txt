@@ -1,4 +1,5 @@
 # key	chinese
+# column1 = match order, column2 = A-column Chinese
 AOI21AOI21	复合逻辑门
 AOI21OAI21	复合逻辑门
 AOI22AOI21	复合逻辑门
@@ -47,6 +48,7 @@ OAI21NR2	复合逻辑门
 OAI22INV	复合逻辑门
 OAI22ND2	复合逻辑门
 OAI22NR2	复合逻辑门
+SDFSYNC1	同步触发器
 SYNLHCNQ	同步器
 SYNLHSNQ	同步器
 XNR2XNR2	复合逻辑门
@@ -91,7 +93,6 @@ AOI321	与或非门
 APTIEH	电平钳位
 APTIEL	电平钳位
 CKMUX2	时钟多路选择器
-CKND24	时钟与非门
 CKXOR2	时钟异或门
 CMPE32	压缩器
 CMPE42	压缩器
@@ -128,7 +129,6 @@ GFILL9	填充单元
 GLHCNQ	锁存器
 GLNCNQ	锁存器
 GMUX2N	反相多路选择器
-GNAND2	与非门
 GOAI21	或与非门
 GOAI22	或与非门
 GOAI33	或与非门
@@ -188,7 +188,6 @@ FILL2	填充单元
 FILL3	填充单元
 FILL4	填充单元
 FILL8	填充单元
-GAND3	与门
 GAO21	与或门
 GAO22	与或门
 GAO31	与或门
@@ -198,7 +197,6 @@ GCKNQ	门控时钟
 GIND4	与非门
 GLAHQ	锁存器
 GMUX2	多路选择器
-GNOR4	或非门
 GOA21	或与门
 GOA22	或与门
 GOA32	或与门
@@ -232,6 +230,7 @@ OAI31	或与非门
 OAI32	或与非门
 OAI33	或与非门
 SD2FF	扫描触发器
+SDFFE	使能扫描触发器
 Y2SDF	扫描触发器
 Y3SDF	扫描触发器
 AO21	与或门
