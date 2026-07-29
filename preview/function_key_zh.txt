@@ -15,9 +15,6 @@ OAI22OAI21	复合逻辑门
 AOI211INV	复合逻辑门
 CKLVLLHCH	电平转换器
 CKLVLLHCL	电平转换器
-DFNRPQND1	D触发器
-DFNRPQND2	D触发器
-DFNSNQND1	D触发器
 FCSICOND1	进位逻辑
 INVAAOI21	复合逻辑门
 INVAOAI21	复合逻辑门
@@ -45,10 +42,6 @@ AOI22NR2	复合逻辑门
 BOUNDARY	边界/版图单元
 DCCKND12	时钟与非门
 DCCKND20	时钟与非门
-DFRPQND1	D触发器
-DFRPQND2	D触发器
-DFSNQND2	D触发器
-DFSNQND4	D触发器
 FCICOND1	进位逻辑
 FCONSND1	进位逻辑
 FIICOND1	进位逻辑
@@ -83,9 +76,6 @@ AOI2221	与或非门
 AOI2222	与或非门
 BENCGRF	编码器
 CKLNCNQ	时钟锁存器
-DFKSRPQ	D触发器
-DFNQND2	D触发器
-DFNSRPQ	D触发器
 FA1SND1	全加器
 FA1SND4	全加器
 FCISND2	进位逻辑
@@ -111,8 +101,6 @@ OAI2211	或与非门
 OAI2221	或与非门
 OAI2222	或与非门
 OAOI211	复合逻辑门
-SD2FFQN	扫描触发器
-SEDFRPQ	扫描触发器
 TAPCELL	阱敲击单元
 XNR2ND2	复合逻辑门
 XNR2NR2	复合逻辑门
@@ -137,13 +125,6 @@ DCAP20	去耦电容
 DCAP32	去耦电容
 DCAP40	去耦电容
 DCAP64	去耦电容
-DFKRPQ	D触发器
-DFKSNQ	D触发器
-DFNRPQ	D触发器
-DFNSNQ	D触发器
-DFQND1	D触发器
-DFSRPQ	D触发器
-EDFRPQ	使能触发器
 FA1ND1	全加器
 FILL12	填充单元
 FILL16	填充单元
@@ -157,8 +138,6 @@ GDCAP2	去耦电容
 GDCAP4	去耦电容
 GDCAP6	去耦电容
 GDCAP8	去耦电容
-GDFRPQ	D触发器
-GDFSNQ	D触发器
 GFILL1	填充单元
 GFILL2	填充单元
 GFILL3	填充单元
@@ -202,6 +181,8 @@ SYNLHQ	同步器
 TIEHXP	电平钳位
 TIELXN	电平钳位
 W2AO22	复合逻辑门
+Y2SDFF	扫描触发器
+Y3SDFF	扫描触发器
 AO211	与或门
 AO222	与或门
 AOI21	与或非门
@@ -222,8 +203,6 @@ DCAP4	去耦电容
 DCAP5	去耦电容
 DCAP8	去耦电容
 DCCKB	时钟缓冲/反相
-DFRPQ	D触发器
-DFSNQ	D触发器
 FCICO	进位逻辑
 FILL1	填充单元
 FILL2	填充单元
@@ -270,7 +249,7 @@ OAI22	或与非门
 OAI31	或与非门
 OAI32	或与非门
 OAI33	或与非门
-SEDFQ	扫描触发器
+SD2FF	扫描触发器
 Y2SDF	扫描触发器
 Y3SDF	扫描触发器
 AO21	与或门
@@ -285,15 +264,10 @@ DELD	延时单元
 DELE	延时单元
 DELF	延时单元
 DELG	延时单元
-DFMQ	D触发器
-DFNQ	D触发器
-DFQN	D触发器
-EDFQ	使能触发器
 FCIS	进位逻辑
 GAN2	与门
 GAN3	与门
 GAN4	与门
-GDFQ	D触发器
 GINV	反相器
 GLHQ	锁存器
 GLNQ	锁存器
@@ -323,6 +297,8 @@ MXI2	反相多路选择器
 OA21	或与门
 OA22	或与门
 RSDF	扫描触发器
+SDFF	扫描触发器
+SEDF	扫描触发器
 XNR2	同或门
 XNR3	同或门
 XNR4	同或门
@@ -337,8 +313,9 @@ BHD	总线保持器
 BUF	缓冲器
 CKB	时钟缓冲/反相
 CKN	时钟缓冲/反相
-DFQ	D触发器
+EDF	使能触发器
 FA1	全加器
+GDF	D触发器
 HA1	半加器
 INV	反相器
 LHQ	锁存器
@@ -354,3 +331,4 @@ OR2	或门
 OR3	或门
 OR4	或门
 SDF	扫描触发器
+DF	D触发器
