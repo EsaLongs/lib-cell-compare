@@ -2,15 +2,16 @@
 """Compare cell lists from two process libraries and write an Excel report.
 
 Usage:
-    python3 compare_cells.py \\
-        --format-filter '"COT.*" "EEQMBD" "EEQMBC" "OPT" "A.{2}$"' \\
-        --format-replace '"FOO : BAR" "X(\\d{1,2}) : D\\\\1"'
+    python3 compare_cells.py --function-keys OAI2211 OAI22 AN2 AN3
+    python3 compare_cells.py --function-keys-file preview/function_keys.txt
 
-Reads NP1PP.list and C1Y.list, applies regex delete filters then regex
-replacements to each full cell name in left-to-right order, re-groups by
-the resulting display key, and writes Excel.
+Column A is the first --function-keys entry that is a prefix of the cell
+name (order matters: put longer forms first, e.g. OAI2211 before OAI22),
+plus a short Chinese function description in the merged cell.
+Matched cells are not reconsidered by later keys.
 
-Quoted tokens are parsed with shlex. Delete filters run before replaces.
+Only identical full cell names share a data row; NP-only / C1-only cells
+each get their own row under the shared function key.
 """
 
 from __future__ import annotations
@@ -33,7 +34,7 @@ C1_FILE = "/mnt/c/Users/t00961128/Downloads/C1Y.list"
 OUTPUT = "/mnt/c/Users/t00961128/Downloads/NP1PP_vs_C1Y.xlsx"
 
 SHEET_TITLE = "Cell Comparison"
-COL_WIDTHS = {"A": 40, "B": 55, "C": 55}
+COL_WIDTHS = {"A": 28, "B": 55, "C": 55}
 FONT_SIZE = 16
 MATCH_FILL = PatternFill(fill_type="solid", fgColor="C6EFCE")
 NORMAL_FONT = Font(size=FONT_SIZE)
@@ -45,6 +46,113 @@ TOP_BORDER = Border(top=BORDER_SIDE)
 BOTTOM_BORDER = Border(bottom=BORDER_SIDE)
 REPLACE_SEP_RE = re.compile(r"\s*:\s*")
 
+# Mid-name process/optimization markers: cut from here to end (pre-COT).
+FUNCTION_CUT_TOKENS = (
+    "EEQMBD",
+    "EEQMBC",
+    "EEQ",
+    "OPT",
+    "SKFMDB",
+    "SKRMDB",
+    "SKND",
+    "SKPD",
+    "SKRD",
+    "SKF",
+    "SKR",
+    "SKN",
+    "SKP",
+    "TWA",
+)
+
+# Layout / track suffixes peeled only when preceded by a digit.
+_TRAILING_TAG_NAMES = (
+    "CNWBAL",
+    "CNW",
+    "CWBAL",
+    "CWRB",
+    "BALRB",
+    "BAL",
+    "RBD",
+    "AROAF",
+    "3FINC",
+    "3FIN",
+    "SHXP",
+    "DHXP",
+    "XP",
+    "VG",
+    "SH",
+    "DH",
+    "SF",
+    "BF",
+    "FF",
+    "AF",
+    "AR2",
+    "AR1",
+    "ARP",
+    "ARN",
+    "ARQ",
+    "ARO",
+    "AAR",
+    "AR",
+    "APA",
+    "APB",
+    "APC",
+    "APD",
+    "APM",
+    "APP",
+    "APN",
+    "APQ",
+    "ANS",
+    "AKP",
+    "AKN",
+    "ATA",
+    "ATB",
+    "ATC",
+    "ATS",
+    "ATF",
+    "ALP",
+    "AHB",
+    "AHA",
+    "AHQ",
+    "AHC",
+    "ASB",
+    "ONE",
+    "ME",
+    "ICC",
+    "LN",
+    "TG",
+    "P5",
+    "SC4LP",
+    "SC5LP",
+    "COMB1",
+)
+TRAILING_TAG_RE = re.compile(
+    r"(?<=\d)(?:"
+    + "|".join(
+        re.escape(tag)
+        for tag in sorted(_TRAILING_TAG_NAMES, key=len, reverse=True)
+    )
+    + r")$"
+)
+DRIVE_RE = re.compile(r"[DX]\d+(?:P\d+)?$")
+# Compound / naming roots that still end with D\d+ or X\d+ (must not peel).
+PROTECTED_ROOT_RE = re.compile(
+    r"(?:"
+    r"(?:CK|G)?(?:ND|NR|IND|INR|IIND|IINR|GND|GNR|GNAND|GNOR)\d+|"
+    r"(?:G)?AND\d+|"
+    r"(?:CK|G)?MUX\d+|"
+    r"MX\d+"
+    r")$"
+)
+# Non-digit-prefixed variants peeled after drive strength.
+VARIANT_SUFFIX_RE = re.compile(
+    r"(?:CCB|CCM|CCA|SNK|SRC|CW|CWBAL|CWRB|BALRB|BAL|DBA4|NOBCM|"
+    r"TGAR|XNRAR|ARSP|VPPVBB|IW|V2|COM)$"
+)
+# "HD" layout marker; keep short roots like BHD (stem shorter than 4).
+HD_SUFFIX_MIN_STEM = 4
+COT_AND_AFTER_RE = re.compile(r"COT.*$")
+
 CellRow = Tuple[str, Optional[str], Optional[str]]
 GroupItem = Tuple[str, bool, bool]
 ReplaceRule = Tuple[Pattern[str], str]
@@ -55,18 +163,54 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
         description=(
-            "Compare NP1PP and C1Y cell lists after regex delete filters "
-            "and optional regex replacements on display keys."
+            "Compare NP1PP and C1Y cell lists by ordered function-key "
+            "prefix match (first hit wins)."
+        ),
+    )
+    parser.add_argument(
+        "--function-keys",
+        nargs="+",
+        default=[],
+        metavar="KEY",
+        dest="function_keys",
+        help=(
+            "Ordered function keys to keep as column A. First prefix match "
+            "wins; later keys do not override. A digit right after the key "
+            "blocks the match (OAI22 will not take OAI2211). Still put "
+            "longer letter-tailed forms first, e.g. "
+            "--function-keys OAI22OAI21 OAI22 AIOI21 AN2 AN3 AN4."
+        ),
+    )
+    parser.add_argument(
+        "--function-keys-file",
+        default="",
+        metavar="PATH",
+        dest="function_keys_file",
+        help=(
+            "Optional file with one function key per line (# comments / "
+            "blank lines skipped). Keys are appended after --function-keys "
+            "in the same first-match-wins order."
+        ),
+    )
+    parser.add_argument(
+        "--dump-suggested-keys",
+        default="",
+        metavar="PATH",
+        dest="dump_suggested_keys",
+        help=(
+            "Write a longest-first suggested key list from the input cell "
+            "names to PATH, then exit (no Excel)."
         ),
     )
     parser.add_argument(
         "--format-filter",
-        required=True,
+        default="",
         metavar="TOKENS",
         dest="format_filter",
         help=(
-            "Quote-delimited regex tokens to delete, applied left-to-right, "
-            "e.g. '\"COT.*\" \"EEQMBD\" \"EEQMBC\" \"OPT\" \"A.{2}$\"'."
+            "Optional quote-delimited regex tokens to delete before "
+            "prefix matching, applied left-to-right, "
+            "e.g. '\"FOO\" \"BAR\"'."
         ),
     )
     parser.add_argument(
@@ -144,6 +288,43 @@ def parse_format_replace(raw: str) -> List[Tuple[str, str]]:
     return mappings
 
 
+def load_function_keys_file(filepath: str) -> List[str]:
+    """Load ordered function keys from a text file (one key per line)."""
+    keys: List[str] = []
+    with open(filepath, encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if any(char.isspace() for char in stripped):
+                print(
+                    f"Invalid key in {filepath}:{line_number}: {stripped!r} "
+                    "(keys must be a single token per line)",
+                    file=sys.stderr,
+                )
+                sys.exit(2)
+            keys.append(stripped)
+    return keys
+
+
+def resolve_function_keys(
+    cli_keys: Sequence[str],
+    keys_file: str,
+) -> List[str]:
+    """Merge CLI keys and optional file keys; require a non-empty list."""
+    keys = [key for key in cli_keys if key]
+    if keys_file:
+        keys.extend(load_function_keys_file(keys_file))
+    if not keys:
+        print(
+            "Error: provide --function-keys and/or --function-keys-file "
+            "with at least one key.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+    return keys
+
+
 # #### I/O
 def read_list(filepath: str) -> List[str]:
     """Read a cell list file, skipping blanks and rg: header lines."""
@@ -214,32 +395,337 @@ def apply_regex_replaces(
     return value
 
 
-def make_display_key(
-    name: str,
-    regex_filters: Sequence[Pattern[str]],
-    regex_replaces: Sequence[ReplaceRule] | None = None,
-) -> str:
-    """Build a display key: delete filters first, then replacements."""
-    value = apply_regex_filters(name, regex_filters)
-    if regex_replaces:
-        value = apply_regex_replaces(value, regex_replaces)
+def _cut_process_tail(name: str) -> str:
+    """Truncate at the earliest mid-name process/optimization marker."""
+    cut_at = len(name)
+    for token in FUNCTION_CUT_TOKENS:
+        index = name.find(token)
+        if index != -1 and index < cut_at:
+            cut_at = index
+    return name[:cut_at]
+
+
+def _peel_trailing_tags(name: str) -> str:
+    """Peel layout/track suffixes that appear immediately after a digit."""
+    while True:
+        match = TRAILING_TAG_RE.search(name)
+        if match is None:
+            break
+        name = name[: match.start()]
+    return name
+
+
+def _peel_variant_suffixes(name: str) -> str:
+    """Peel known non-drive variant suffixes (CCA/CCB/SNK/HD/...)."""
+    while True:
+        match = VARIANT_SUFFIX_RE.search(name)
+        if match is not None:
+            name = name[: match.start()]
+            continue
+        if name.endswith("HD") and len(name) - 2 >= HD_SUFFIX_MIN_STEM:
+            name = name[:-2]
+            continue
+        break
+    return name
+
+
+def extract_function_root(name: str) -> str:
+    """Extract a suggested logic-function root from a full cell name.
+
+    Used to build default key lists; runtime grouping uses --function-keys
+    prefix matching instead.
+    """
+    value = COT_AND_AFTER_RE.sub("", name)
+    value = _cut_process_tail(value)
+    while True:
+        value = _peel_trailing_tags(value)
+        value = _peel_variant_suffixes(value)
+        if PROTECTED_ROOT_RE.search(value):
+            break
+        match = DRIVE_RE.search(value)
+        if match is None:
+            break
+        value = value[: match.start()]
+    value = _peel_trailing_tags(value)
+    value = _peel_variant_suffixes(value)
     return value
 
 
+def match_function_key(
+    name: str,
+    function_keys: Sequence[str],
+) -> Optional[str]:
+    """Return the first function key that prefixes name, else None.
+
+    Earlier keys win permanently: a name matched by OAI2211 is never
+    reconsidered by a later OAI22.
+
+    A match requires that the character after the key is not a digit, so
+    OAI22 does not steal OAI221 / OAI2222 / OAI2211; FILL1 does not steal
+    FILL12. Put longer non-numeric tails first when needed (e.g. OAI22OAI21
+    before OAI22, XOR2AOI22 before XOR2).
+    """
+    for key in function_keys:
+        if not name.startswith(key):
+            continue
+        rest = name[len(key) :]
+        if rest and rest[0].isdigit():
+            continue
+        return key
+    return None
+
+
+def describe_function_key(  # pylint: disable=too-many-return-statements,too-many-branches,too-many-statements
+    key: str,
+) -> str:
+    """Return a short Chinese label for a function key (may be empty)."""
+    if key.startswith(("BOUNDARY", "HDDICWY", "HDDID")):
+        return "边界/版图单元"
+    if key.startswith("ANTENNA"):
+        return "天线二极管"
+    if key.startswith("TAPCELL"):
+        return "阱敲击单元"
+    if key.startswith(("FILL", "GFILL")):
+        return "填充单元"
+    if key.startswith(("DCAP", "GDCAP")):
+        return "去耦电容"
+    if key.startswith(("TIE", "GTIE", "APTIE")):
+        return "电平钳位"
+    if key == "BHD":
+        return "总线保持器"
+    if key.startswith("DEL"):
+        return "延时单元"
+    if "PULL" in key:
+        return "上拉/下拉"
+    if key.startswith("ISO"):
+        return "隔离单元"
+    if key.startswith(("LVL", "LVU", "CKLVL", "CKLV")):
+        return "电平转换器"
+    if key.startswith("SYN"):
+        return "同步器"
+    if key == "BUFT":
+        return "三态缓冲器"
+    if key == "INVPAD":
+        return "焊盘反相器"
+    if key.startswith(("BUFF", "BUF", "GBUFF", "APBUF")):
+        return "缓冲器"
+    if re.match(r"^INV[A-Z]", key) and ("AOI" in key or "OAI" in key):
+        return "复合逻辑门"
+    if key.startswith(("INV", "GINV", "APINV")):
+        return "反相器"
+    if key.startswith(("CK", "DCCK", "GCK")):
+        if "MUX" in key:
+            return "时钟多路选择器"
+        if re.search(r"ND\d", key) or "NAND" in key:
+            return "时钟与非门"
+        if re.search(r"NR\d", key) or "NOR" in key:
+            return "时钟或非门"
+        if re.search(r"AN\d", key):
+            return "时钟与门"
+        if "XOR" in key:
+            return "时钟异或门"
+        if re.search(r"OR\d", key):
+            return "时钟或门"
+        if key in ("CKB", "DCCKB", "CKN") or key.endswith("CKB"):
+            return "时钟缓冲/反相"
+        if any(token in key for token in ("LNQ", "LHQ", "LNCNQ", "LHCNQ")):
+            return "时钟锁存器"
+        if key.startswith("GCK"):
+            return "门控时钟"
+        return "时钟单元"
+    if key.startswith("MB") or key.startswith("MCE"):
+        if "LH" in key or "LN" in key or "CNQ" in key:
+            return "多比特锁存器"
+        return "多比特触发器"
+    if key.startswith("SEDF"):
+        return "扫描触发器"
+    if key.startswith("EDF"):
+        return "使能触发器"
+    if any(
+        key.startswith(prefix)
+        for prefix in (
+            "SDFF",
+            "SD2FF",
+            "SDF",
+            "RSDF",
+            "GSDF",
+            "Y2SDFF",
+            "Y3SDFF",
+            "Y2SDF",
+            "Y3SDF",
+            "YSDF",
+        )
+    ):
+        if "SYNC" in key:
+            return "同步触发器"
+        return "扫描触发器"
+    if key.startswith(("DF", "GDF")):
+        return "D触发器"
+    if any(
+        key.startswith(prefix)
+        for prefix in (
+            "LHQ",
+            "LNQ",
+            "LHCNQ",
+            "LNCNQ",
+            "LHSNQ",
+            "LNSNQ",
+            "LHCSNQ",
+            "LNCSNQ",
+            "GLHQ",
+            "GLNQ",
+            "GLAHQ",
+            "GLHCNQ",
+            "GLNCNQ",
+        )
+    ):
+        return "锁存器"
+    if key.startswith("FA"):
+        return "全加器"
+    if key.startswith(("HA", "HAC")):
+        return "半加器"
+    if key.startswith("CMPE"):
+        return "压缩器"
+    if key.startswith(("FC", "FI", "FCON")):
+        return "进位逻辑"
+    if key.startswith("BENC"):
+        return "编码器"
+    if "MUX" in key or key.startswith(("MXI", "MX", "GMUX")):
+        if any(token in key for token in ("ND", "NR", "AOI", "NND", "NNR")):
+            return "复合多路选择器"
+        if (
+            key.startswith("MXI")
+            or re.search(r"MUX\d+I", key)
+            or re.search(r"MUX\d+N$", key)
+        ):
+            return "反相多路选择器"
+        return "多路选择器"
+    if key.startswith(
+        (
+            "MAOI",
+            "MOAI",
+            "AOAI",
+            "OAOI",
+            "AIOI",
+            "IAO",
+            "IAOI",
+            "IOA",
+            "IOAI",
+            "OIAI",
+            "WAO",
+            "W2AO",
+        )
+    ):
+        return "复合逻辑门"
+    if re.match(r"^(XOR|XNR|AOI|OAI|ND|NR|AN|OR)\d+", key):
+        rest = re.sub(r"^(XOR|XNR|AOI|OAI|ND|NR|AN|OR)\d+", "", key)
+        if rest and re.match(
+            r"^(AOI|OAI|XOR|XNR|ND|NR|INV|AN|OR|AO|OA|IOA)",
+            rest,
+        ):
+            return "复合逻辑门"
+    if key.startswith(("AOI", "GAOI")):
+        return "与或非门"
+    if key.startswith(("OAI", "GOAI")):
+        return "或与非门"
+    if key.startswith(("AO", "GAO")) and not key.startswith("AOI"):
+        return "与或门"
+    if key.startswith(("OA", "GOA")) and not key.startswith("OAI"):
+        return "或与门"
+    if key.startswith(("XOR", "GXOR")):
+        return "异或门"
+    if key.startswith(("XNR", "GXNR")):
+        return "同或门"
+    if re.match(r"^(G)?(ND|NAND|IND|IIND|GNAND|GND|GIND)\d", key) or re.match(
+        r"^ND\d",
+        key,
+    ):
+        return "与非门"
+    if re.match(r"^(G)?(NR|NOR|INR|IINR|GNOR|GNR)\d", key) or re.match(
+        r"^NR\d",
+        key,
+    ):
+        return "或非门"
+    if (
+        re.match(r"^(G)?AN\d", key)
+        or re.match(r"^GAND", key)
+        or re.match(r"^GAN\d", key)
+    ):
+        return "与门"
+    if re.match(r"^(G)?OR\d", key) or re.match(r"^GOR\d", key):
+        return "或门"
+    if key.startswith("AP"):
+        return "辅助单元"
+    return ""
+
+
+def format_column_a_label(function_key: str) -> str:
+    """Build merged-cell text: function key plus Chinese brief."""
+    chinese = describe_function_key(function_key)
+    if chinese:
+        return f"{function_key}\n{chinese}"
+    return function_key
+
+
+def make_display_key(
+    name: str,
+    function_keys: Sequence[str],
+    regex_filters: Sequence[Pattern[str]],
+    regex_replaces: Sequence[ReplaceRule] | None = None,
+) -> Tuple[str, bool]:
+    """Build column-A key via ordered prefix match.
+
+    Returns (key, matched). Unmatched cells keep the post-filter name so
+    gaps stay visible in the spreadsheet.
+    """
+    value = apply_regex_filters(name, regex_filters)
+    if regex_replaces:
+        value = apply_regex_replaces(value, regex_replaces)
+    matched = match_function_key(value, function_keys)
+    if matched is not None:
+        return matched, True
+    return value, False
+
+
 # #### Grouping
-def group_cells(
+def group_cells(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     all_cells: Sequence[str],
     np_set: Set[str],
     c1_set: Set[str],
+    function_keys: Sequence[str],
     regex_filters: Sequence[Pattern[str]],
     regex_replaces: Sequence[ReplaceRule] | None = None,
-) -> Dict[str, List[GroupItem]]:
-    """Group cells by display key with NP/C1 membership flags."""
+) -> Tuple[Dict[str, List[GroupItem]], List[str]]:
+    """Group cells by function key; return groups and unmatched names."""
     groups: Dict[str, List[GroupItem]] = defaultdict(list)
+    unmatched: List[str] = []
     for cell in all_cells:
-        key = make_display_key(cell, regex_filters, regex_replaces)
+        key, matched = make_display_key(
+            cell,
+            function_keys,
+            regex_filters,
+            regex_replaces,
+        )
+        if not matched:
+            unmatched.append(cell)
         groups[key].append((cell, cell in np_set, cell in c1_set))
-    return groups
+    return groups, unmatched
+
+
+def dump_suggested_keys(
+    cells: Sequence[str],
+    output_path: str,
+) -> List[str]:
+    """Write longest-first suggested keys derived from cell names."""
+    roots = {extract_function_root(cell) for cell in cells}
+    keys = sorted(root for root in roots if root)
+    keys.sort(key=lambda item: (-len(item), item))
+    with open(output_path, "w", encoding="utf-8") as handle:
+        handle.write("# Suggested --function-keys (longest first)\n")
+        handle.write(f"# cells={len(cells)} keys={len(keys)}\n")
+        for key in keys:
+            handle.write(f"{key}\n")
+    return keys
 
 
 def _partition_group(
@@ -267,17 +753,19 @@ def build_rows(groups: Dict[str, List[GroupItem]]) -> List[CellRow]:
 
     Only identical full cell names share a row (both NP and C1 filled).
     NP-only and C1-only cells each get their own row; they are never
-    zip-paired across libraries.
+    zip-paired across libraries. Column A shows function key plus a short
+    Chinese description.
     """
     rows: List[CellRow] = []
     for key in sorted(groups.keys()):
+        display = format_column_a_label(key)
         exact_matches, np_only, c1_only = _partition_group(groups[key])
         for cell in exact_matches:
-            rows.append((key, cell, cell))
+            rows.append((display, cell, cell))
         for cell in np_only:
-            rows.append((key, cell, None))
+            rows.append((display, cell, None))
         for cell in c1_only:
-            rows.append((key, None, cell))
+            rows.append((display, None, cell))
     return rows
 
 
@@ -397,23 +885,12 @@ def write_excel(output_path: str, rows: Sequence[CellRow]) -> None:
 
 
 # #### Main
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Optional[Sequence[str]] = None) -> int:  # pylint: disable=too-many-locals
     """Run the cell comparison pipeline."""
     args = parse_args(argv)
-    patterns = split_format_filter(args.format_filter)
-    if not patterns:
-        print("Error: --format-filter has no tokens after quote parsing.")
-        return 2
-
-    replace_mappings = parse_format_replace(args.format_replace)
-    regex_filters = compile_regex_filters(patterns)
-    regex_replaces = compile_regex_replaces(replace_mappings)
-    print(f"Regex filters (ordered): {patterns}")
-    print(f"Regex replaces (ordered): {replace_mappings}")
 
     np1_cells = read_list(args.np_file)
     c1y_cells = read_list(args.c1_file)
-
     np_set = set(np1_cells)
     c1_set = set(c1y_cells)
     all_cells = sorted(np_set | c1_set)
@@ -422,15 +899,46 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         f"Combined unique: {len(all_cells)}"
     )
 
-    groups = group_cells(
+    if args.dump_suggested_keys:
+        keys = dump_suggested_keys(all_cells, args.dump_suggested_keys)
+        print(
+            f"Wrote {len(keys)} suggested keys to {args.dump_suggested_keys}"
+        )
+        return 0
+
+    function_keys = resolve_function_keys(
+        args.function_keys,
+        args.function_keys_file,
+    )
+    patterns = split_format_filter(args.format_filter)
+    replace_mappings = parse_format_replace(args.format_replace)
+    regex_filters = compile_regex_filters(patterns)
+    regex_replaces = compile_regex_replaces(replace_mappings)
+    print(f"Function keys: {len(function_keys)}")
+    print(f"Regex filters (ordered): {patterns or '(none)'}")
+    print(f"Regex replaces (ordered): {replace_mappings or '(none)'}")
+
+    groups, unmatched = group_cells(
         all_cells,
         np_set,
         c1_set,
+        function_keys,
         regex_filters,
         regex_replaces,
     )
     rows = build_rows(groups)
-    print(f"Output rows: {len(rows)}, Unique display keys: {len(groups)}")
+    print(
+        f"Output rows: {len(rows)}, Unique function keys used: {len(groups)}, "
+        f"Unmatched cells: {len(unmatched)}"
+    )
+    if unmatched:
+        preview = ", ".join(unmatched[:10])
+        more = "" if len(unmatched) <= 10 else f", ... (+{len(unmatched) - 10})"
+        print(
+            f"Warning: unmatched cells keep post-filter names as keys: "
+            f"{preview}{more}",
+            file=sys.stderr,
+        )
 
     write_excel(args.output, rows)
     print(f"Done! Saved to {args.output}")
