@@ -161,6 +161,8 @@ LAYOUT_FAMILY_PREFIXES = (
     "HDDID",
 )
 COT_AND_AFTER_RE = re.compile(r"COT.*$")
+# Scan / multibit FF: keep through SDF, drop Q/RPQ/SNQ/... tails.
+SDF_TOKEN = "SDF"
 
 CellRow = Tuple[str, Optional[str], Optional[str]]
 GroupItem = Tuple[str, bool, bool]
@@ -450,6 +452,14 @@ def _normalize_layout_family(name: str) -> str:
     return name
 
 
+def _collapse_sdf_tail(name: str) -> str:
+    """Omit Q/RPQ/SNQ/... after SDF for scan and multibit flip-flops."""
+    index = name.find(SDF_TOKEN)
+    if index == -1:
+        return name
+    return name[: index + len(SDF_TOKEN)]
+
+
 def extract_function_root(name: str) -> str:
     """Extract a suggested logic-function root from a full cell name.
 
@@ -469,6 +479,7 @@ def extract_function_root(name: str) -> str:
         value = value[: match.start()]
     value = _peel_trailing_tags(value)
     value = _peel_variant_suffixes(value)
+    value = _collapse_sdf_tail(value)
     return _normalize_layout_family(value)
 
 
@@ -557,6 +568,8 @@ def describe_function_key(  # pylint: disable=too-many-return-statements,too-man
             return "门控时钟"
         return "时钟单元"
     if key.startswith("MB") or key.startswith("MCE"):
+        if "SDF" in key:
+            return "多比特触发器"
         if "LH" in key or "LN" in key or "CNQ" in key:
             return "多比特锁存器"
         return "多比特触发器"
@@ -564,12 +577,11 @@ def describe_function_key(  # pylint: disable=too-many-return-statements,too-man
         return "扫描触发器"
     if key.startswith("EDF"):
         return "使能触发器"
-    if any(
+    if "SDF" in key or any(
         key.startswith(prefix)
         for prefix in (
             "SDFF",
             "SD2FF",
-            "SDF",
             "RSDF",
             "GSDF",
             "Y2SDFF",
