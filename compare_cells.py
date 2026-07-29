@@ -464,10 +464,8 @@ def match_function_key(
 
 
 def format_key_column_label(function_key: str, zh_map: Dict[str, str]) -> str:
-    """Build column-B text: function key plus Chinese brief."""
-    chinese = zh_map.get(function_key, "")
-    if chinese:
-        return f"{function_key}\n{chinese}"
+    """Build column-B text: English function key only."""
+    del zh_map  # Chinese is shown only in column A.
     return function_key
 
 
