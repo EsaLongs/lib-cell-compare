@@ -476,6 +476,49 @@ def group_cells(
     return groups, unmatched
 
 
+def unmatched_source_label(
+    cell: str,
+    np_set: Set[str],
+    c1_set: Set[str],
+) -> str:
+    """Return which input list(s) an unmatched cell comes from."""
+    in_np = cell in np_set
+    in_c1 = cell in c1_set
+    if in_np and in_c1:
+        return "NP1PP+C1Y"
+    if in_np:
+        return "NP1PP"
+    if in_c1:
+        return "C1Y"
+    return "?"
+
+
+def print_unmatched_cells(
+    unmatched: Sequence[str],
+    np_set: Set[str],
+    c1_set: Set[str],
+) -> None:
+    """Print every unmatched cell with its source list (copy-paste friendly)."""
+    print(
+        f"Warning: {len(unmatched)} unmatched cells "
+        "(kept as column-A keys). Full list:",
+        file=sys.stderr,
+    )
+    print("# source\tcell", file=sys.stderr)
+    for cell in unmatched:
+        source = unmatched_source_label(cell, np_set, c1_set)
+        print(f"{source}\t{cell}", file=sys.stderr)
+
+    np_only = [c for c in unmatched if c in np_set and c not in c1_set]
+    c1_only = [c for c in unmatched if c in c1_set and c not in np_set]
+    both = [c for c in unmatched if c in np_set and c in c1_set]
+    print(
+        f"# summary: NP1PP-only={len(np_only)} "
+        f"C1Y-only={len(c1_only)} both={len(both)}",
+        file=sys.stderr,
+    )
+
+
 def _partition_group(
     items: Sequence[GroupItem],
 ) -> Tuple[List[str], List[str], List[str]]:
@@ -657,13 +700,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         f"Unmatched cells: {len(unmatched)}"
     )
     if unmatched:
-        preview = ", ".join(unmatched[:10])
-        more = "" if len(unmatched) <= 10 else f", ... (+{len(unmatched) - 10})"
-        print(
-            f"Warning: unmatched cells keep original names as keys: "
-            f"{preview}{more}",
-            file=sys.stderr,
-        )
+        print_unmatched_cells(unmatched, np_set, c1_set)
 
     write_excel(args.output, rows)
     print(f"Done! Saved to {args.output}")
