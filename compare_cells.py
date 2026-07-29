@@ -154,6 +154,12 @@ VARIANT_SUFFIX_RE = re.compile(
 BN_VARIANT_RE = re.compile(r"(?<=\d)[BN]\d$")
 # "HD" layout marker; keep short roots like BHD (stem shorter than 4).
 HD_SUFFIX_MIN_STEM = 4
+# Physical layout families: collapse sized variants to one key each.
+LAYOUT_FAMILY_PREFIXES = (
+    "BOUNDARY",
+    "HDDICWY",
+    "HDDID",
+)
 COT_AND_AFTER_RE = re.compile(r"COT.*$")
 
 CellRow = Tuple[str, Optional[str], Optional[str]]
@@ -436,6 +442,14 @@ def _peel_variant_suffixes(name: str) -> str:
     return name
 
 
+def _normalize_layout_family(name: str) -> str:
+    """Collapse sized layout cells to their family prefix key."""
+    for prefix in LAYOUT_FAMILY_PREFIXES:
+        if name.startswith(prefix):
+            return prefix
+    return name
+
+
 def extract_function_root(name: str) -> str:
     """Extract a suggested logic-function root from a full cell name.
 
@@ -455,7 +469,7 @@ def extract_function_root(name: str) -> str:
         value = value[: match.start()]
     value = _peel_trailing_tags(value)
     value = _peel_variant_suffixes(value)
-    return value
+    return _normalize_layout_family(value)
 
 
 def match_function_key(
@@ -469,14 +483,16 @@ def match_function_key(
 
     A match requires that the character after the key is not a digit, so
     OAI22 does not steal OAI221 / OAI2222 / OAI2211; FILL1 does not steal
-    FILL12. Put longer non-numeric tails first when needed (e.g. OAI22OAI21
-    before OAI22, XOR2AOI22 before XOR2).
+    FILL12. Layout family keys (BOUNDARY/HDDICWY/HDDID) allow a following
+    digit so sized variants still collapse. Put longer non-numeric tails
+    first when needed (e.g. OAI22OAI21 before OAI22, XOR2AOI22 before XOR2).
     """
+    layout_families = set(LAYOUT_FAMILY_PREFIXES)
     for key in function_keys:
         if not name.startswith(key):
             continue
         rest = name[len(key) :]
-        if rest and rest[0].isdigit():
+        if rest and rest[0].isdigit() and key not in layout_families:
             continue
         return key
     return None
