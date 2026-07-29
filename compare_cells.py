@@ -656,6 +656,71 @@ def print_unmatched_cells(
     )
 
 
+def _families_by_chinese(
+    groups: Dict[str, List[GroupItem]],
+    zh_map: Dict[str, str],
+) -> Dict[str, Dict[str, Tuple[str, List[GroupItem]]]]:
+    """Group keys into coarse Chinese -> family_id -> (fine_zh, items)."""
+    by_chinese: Dict[str, Dict[str, Tuple[str, List[GroupItem]]]] = defaultdict(
+        dict
+    )
+    for key, items in groups.items():
+        chinese = chinese_for_key(key, zh_map)
+        family_id, fine_zh = key_family(key)
+        if family_id in by_chinese[chinese]:
+            _old_zh, old_items = by_chinese[chinese][family_id]
+            old_items.extend(items)
+        else:
+            by_chinese[chinese][family_id] = (fine_zh, list(items))
+    return by_chinese
+
+
+def collect_missing_fine_zh(
+    groups: Dict[str, List[GroupItem]],
+    zh_map: Dict[str, str],
+) -> List[Tuple[str, str, str]]:
+    """Cells whose B-family lacks fine_zh while sharing an A-group with others.
+
+    Returns (coarse_zh, family_id, cell) rows for copy-paste reporting.
+    """
+    missing: List[Tuple[str, str, str]] = []
+    by_chinese = _families_by_chinese(groups, zh_map)
+    for chinese, families in by_chinese.items():
+        if len(families) <= 1:
+            continue
+        coarse = chinese or "(空中文)"
+        for family_id, (fine_zh, items) in families.items():
+            if fine_zh:
+                continue
+            for cell, _in_np, _in_c1 in items:
+                missing.append((coarse, family_id, cell))
+    missing.sort()
+    return missing
+
+
+def print_missing_fine_zh(
+    missing: Sequence[Tuple[str, str, str]],
+    np_set: Set[str],
+    c1_set: Set[str],
+) -> None:
+    """Print families that need fine_zh under a shared coarse Chinese."""
+    print(
+        f"Warning: {len(missing)} cells in multi-family A-groups "
+        "have empty fine_zh (B shows English only). Full list:",
+        file=sys.stderr,
+    )
+    print("# coarse_zh\tfamily\tsource\tcell", file=sys.stderr)
+    families: Set[str] = set()
+    for coarse, family_id, cell in missing:
+        families.add(f"{coarse}/{family_id}")
+        source = unmatched_source_label(cell, np_set, c1_set)
+        print(f"{coarse}\t{family_id}\t{source}\t{cell}", file=sys.stderr)
+    print(
+        f"# summary: cells={len(missing)} family_slots={len(families)}",
+        file=sys.stderr,
+    )
+
+
 def _partition_group(
     items: Sequence[GroupItem],
 ) -> Tuple[List[str], List[str], List[str]]:
@@ -689,18 +754,7 @@ def build_rows(
     stay contiguous. Column B may add a fine Chinese label when multiple
     families share one A-group.
     """
-    # chinese -> family_id -> (fine_zh, items)
-    by_chinese: Dict[str, Dict[str, Tuple[str, List[GroupItem]]]] = defaultdict(
-        dict
-    )
-    for key, items in groups.items():
-        chinese = chinese_for_key(key, zh_map)
-        family_id, fine_zh = key_family(key)
-        if family_id in by_chinese[chinese]:
-            _old_zh, old_items = by_chinese[chinese][family_id]
-            old_items.extend(items)
-        else:
-            by_chinese[chinese][family_id] = (fine_zh, list(items))
+    by_chinese = _families_by_chinese(groups, zh_map)
 
     rows: List[CellRow] = []
     for chinese in sorted(by_chinese.keys(), key=lambda value: value or "\uffff"):
@@ -871,12 +925,16 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         function_keys,
     )
     rows = build_rows(groups, zh_map)
+    missing_fine = collect_missing_fine_zh(groups, zh_map)
     print(
         f"Output rows: {len(rows)}, Unique function keys used: {len(groups)}, "
-        f"Unmatched cells: {len(unmatched)}"
+        f"Unmatched cells: {len(unmatched)}, "
+        f"Missing fine_zh cells: {len(missing_fine)}"
     )
     if unmatched:
         print_unmatched_cells(unmatched, np_set, c1_set)
+    if missing_fine:
+        print_missing_fine_zh(missing_fine, np_set, c1_set)
 
     write_excel(args.output, rows)
     print(f"Done! Saved to {args.output}")
