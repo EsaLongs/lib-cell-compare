@@ -153,6 +153,8 @@ VARIANT_SUFFIX_RE = re.compile(
 # Device/ratio variants after topology digits, e.g. AOI21B1 / AOI21N2 / ND2N1.
 # Require a preceding digit so AN2 / GAN2 are not peeled.
 BN_VARIANT_RE = re.compile(r"(?<=\d)[BN]\d$")
+# Level-shifter domain side after LH/HL direction (not a distinct logic function).
+LVL_SIDE_RE = re.compile(r"(?<=(?:LH|HL))(?:CH|CL)$")
 # "HD" layout marker; keep short roots like BHD (stem shorter than 4).
 HD_SUFFIX_MIN_STEM = 4
 # Physical layout families: collapse sized variants to one key each.
@@ -453,6 +455,10 @@ def _peel_variant_suffixes(name: str) -> str:
             name = name[:-2]
             continue
         match = BN_VARIANT_RE.search(name)
+        if match is not None:
+            name = name[: match.start()]
+            continue
+        match = LVL_SIDE_RE.search(name)
         if match is not None:
             name = name[: match.start()]
             continue

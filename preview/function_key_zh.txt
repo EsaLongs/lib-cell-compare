@@ -13,8 +13,6 @@ OAI21OAI21	复合逻辑门
 OAI22AOI21	复合逻辑门
 OAI22OAI21	复合逻辑门
 AOI211INV	复合逻辑门
-CKLVLLHCH	电平转换器
-CKLVLLHCL	电平转换器
 FCSICOND1	进位逻辑
 INVAAOI21	复合逻辑门
 INVAOAI21	复合逻辑门
@@ -76,6 +74,7 @@ AOI2221	与或非门
 AOI2222	与或非门
 BENCGRF	编码器
 CKLNCNQ	时钟锁存器
+CKLVLLH	电平转换器
 FA1SND1	全加器
 FA1SND4	全加器
 FCISND2	进位逻辑
@@ -87,10 +86,6 @@ GOAI211	或与非门
 GTIEHXP	电平钳位
 GTIELXN	电平钳位
 HDDICWY	边界/版图单元
-LVLHLCH	电平转换器
-LVLHLCL	电平转换器
-LVLLHCH	电平转换器
-LVLLHCL	电平转换器
 MAOI222	复合逻辑门
 MUX2AOI	复合多路选择器
 MUX2ND2	复合多路选择器
@@ -240,6 +235,8 @@ LHCNQ	锁存器
 LHSNQ	锁存器
 LNCNQ	锁存器
 LNSNQ	锁存器
+LVLHL	电平转换器
+LVLLH	电平转换器
 MUX2I	反相多路选择器
 MUX4N	反相多路选择器
 OA211	或与门
