@@ -242,8 +242,9 @@ KEY_FAMILY_RULES: Tuple[Tuple[Pattern[str], str, str], ...] = (
     (re.compile(r"^CMPE\d+$"), "CMPE", ""),
     (re.compile(r"^SYNLH"), "SYNLH", ""),
     (re.compile(r"^MB\d+SRLSDF$"), "MBSDF", ""),
-    (re.compile(r"^MB\d+"), "MBLAT", ""),
-    (re.compile(r"^MCE"), "MCE", ""),
+    # MB* = multi-bit D latch (VeriSilicon MBLAT); MCE* = clock-enable latch.
+    (re.compile(r"^MB\d+"), "MBLAT", "多比特D锁存"),
+    (re.compile(r"^MCE"), "MCE", "时钟使能锁存"),
     # Latches (incl. clock latches): only LH vs LN; LAH counted as high.
     (re.compile(r"LN"), "LN", "低电平透明"),
     (re.compile(r"LH|LAH"), "LH", "高电平透明"),
@@ -264,8 +265,9 @@ KEY_FAMILY_RULES: Tuple[Tuple[Pattern[str], str, str], ...] = (
     (re.compile(r"^BOUNDARY$"), "BOUNDARY", "BOUNDARY"),
     (re.compile(r"^HDDICWY$"), "HDDICWY", "HDDICWY"),
     (re.compile(r"^HDDID$"), "HDDID", "HDDID"),
-    (re.compile(r"^FC"), "FC", ""),
-    (re.compile(r"^FI"), "FI", ""),
+    # Special datapath FA (TCBN): FC* carry-chain / FI* carry-out select (FIICON).
+    (re.compile(r"^FC"), "FC", "进位链全加"),
+    (re.compile(r"^FI"), "FI", "进位选择全加"),
 )
 
 
