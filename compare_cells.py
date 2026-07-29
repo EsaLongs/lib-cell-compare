@@ -6,7 +6,8 @@ Usage:
     python3 compare_cells.py --function-keys-file preview/function_keys.txt
 
 Column A is the first --function-keys entry that is a prefix of the cell
-name (order matters: put longer forms first, e.g. OAI2211 before OAI22).
+name (order matters: put longer forms first, e.g. OAI2211 before OAI22),
+plus a short Chinese function description in the merged cell.
 Matched cells are not reconsidered by later keys.
 
 Only identical full cell names share a data row; NP-only / C1-only cells
@@ -33,7 +34,7 @@ C1_FILE = "/mnt/c/Users/t00961128/Downloads/C1Y.list"
 OUTPUT = "/mnt/c/Users/t00961128/Downloads/NP1PP_vs_C1Y.xlsx"
 
 SHEET_TITLE = "Cell Comparison"
-COL_WIDTHS = {"A": 40, "B": 55, "C": 55}
+COL_WIDTHS = {"A": 28, "B": 55, "C": 55}
 FONT_SIZE = 16
 MATCH_FILL = PatternFill(fill_type="solid", fgColor="C6EFCE")
 NORMAL_FONT = Font(size=FONT_SIZE)
@@ -474,6 +475,188 @@ def match_function_key(
     return None
 
 
+def describe_function_key(  # pylint: disable=too-many-return-statements,too-many-branches,too-many-statements
+    key: str,
+) -> str:
+    """Return a short Chinese label for a function key (may be empty)."""
+    if key.startswith(("BOUNDARY", "HDDICWY", "HDDID")):
+        return "边界/版图单元"
+    if key.startswith("ANTENNA"):
+        return "天线二极管"
+    if key.startswith("TAPCELL"):
+        return "阱敲击单元"
+    if key.startswith(("FILL", "GFILL")):
+        return "填充单元"
+    if key.startswith(("DCAP", "GDCAP")):
+        return "去耦电容"
+    if key.startswith(("TIE", "GTIE", "APTIE")):
+        return "电平钳位"
+    if key == "BHD":
+        return "总线保持器"
+    if key.startswith("DEL"):
+        return "延时单元"
+    if "PULL" in key:
+        return "上拉/下拉"
+    if key.startswith(("ISO", "LVL", "LVU", "CKLVL", "CKLV")):
+        return "电平转换器"
+    if key.startswith("SYN"):
+        return "同步器"
+    if key == "BUFT":
+        return "三态缓冲器"
+    if key == "INVPAD":
+        return "焊盘反相器"
+    if key.startswith(("BUFF", "BUF", "GBUFF", "APBUF")):
+        return "缓冲器"
+    if re.match(r"^INV[A-Z]", key) and ("AOI" in key or "OAI" in key):
+        return "复合逻辑门"
+    if key.startswith(("INV", "GINV", "APINV")):
+        return "反相器"
+    if key.startswith(("CK", "DCCK", "GCK")):
+        if "MUX" in key:
+            return "时钟多路选择器"
+        if re.search(r"ND\d", key) or "NAND" in key:
+            return "时钟与非门"
+        if re.search(r"NR\d", key) or "NOR" in key:
+            return "时钟或非门"
+        if re.search(r"AN\d", key):
+            return "时钟与门"
+        if re.search(r"OR\d", key):
+            return "时钟或门"
+        if "XOR" in key:
+            return "时钟异或门"
+        if key in ("CKB", "DCCKB") or key.endswith("CKB"):
+            return "时钟缓冲/反相"
+        if any(token in key for token in ("LNQ", "LHQ", "LNCNQ", "LHCNQ")):
+            return "时钟锁存器"
+        return "时钟单元"
+    if key.startswith("MB") or key.startswith("MCE"):
+        if "LH" in key or "LN" in key or "CNQ" in key:
+            return "多比特锁存器"
+        return "多比特触发器"
+    if any(
+        key.startswith(prefix)
+        for prefix in (
+            "SDFF",
+            "SD2FF",
+            "SDF",
+            "RSDF",
+            "GSDF",
+            "EDF",
+            "SEDF",
+            "Y2SDFF",
+            "Y3SDFF",
+            "Y2SDF",
+            "Y3SDF",
+            "YSDF",
+        )
+    ):
+        if "SYNC" in key:
+            return "同步触发器"
+        return "扫描触发器"
+    if key.startswith(("DF", "GDF")):
+        return "D触发器"
+    if any(
+        key.startswith(prefix)
+        for prefix in (
+            "LHQ",
+            "LNQ",
+            "LHCNQ",
+            "LNCNQ",
+            "LHSNQ",
+            "LNSNQ",
+            "LHCSNQ",
+            "LNCSNQ",
+            "GLHQ",
+            "GLNQ",
+            "GLAHQ",
+            "GLHCNQ",
+            "GLNCNQ",
+        )
+    ):
+        return "锁存器"
+    if key.startswith("FA"):
+        return "全加器"
+    if key.startswith(("HA", "HAC")):
+        return "半加器"
+    if key.startswith("CMPE"):
+        return "比较器"
+    if key.startswith(("FC", "FI", "FCON")):
+        return "进位逻辑"
+    if key.startswith("BENC"):
+        return "编码器"
+    if "MUX" in key or key.startswith(("MXI", "MX", "GMUX")):
+        if any(token in key for token in ("ND", "NR", "AOI", "NND", "NNR")):
+            return "复合多路选择器"
+        if key.startswith("MXI") or re.search(r"MUX\d+I", key):
+            return "反相多路选择器"
+        return "多路选择器"
+    if key.startswith(
+        (
+            "MAOI",
+            "MOAI",
+            "AOAI",
+            "OAOI",
+            "AIOI",
+            "IAO",
+            "IAOI",
+            "IOA",
+            "IOAI",
+            "OIAI",
+            "WAO",
+            "W2AO",
+        )
+    ):
+        return "复合逻辑门"
+    if re.match(r"^(XOR|XNR|AOI|OAI|ND|NR|AN|OR)\d+", key):
+        rest = re.sub(r"^(XOR|XNR|AOI|OAI|ND|NR|AN|OR)\d+N?\d*", "", key)
+        if rest and re.match(
+            r"^(AOI|OAI|XOR|XNR|ND|NR|INV|AN|OR|AO|OA)",
+            rest,
+        ):
+            return "复合逻辑门"
+    if key.startswith(("AOI", "GAOI")):
+        return "与或非门"
+    if key.startswith(("OAI", "GOAI")):
+        return "或与非门"
+    if key.startswith(("AO", "GAO")) and not key.startswith("AOI"):
+        return "与或门"
+    if key.startswith(("OA", "GOA")) and not key.startswith("OAI"):
+        return "或与门"
+    if key.startswith(("XOR", "GXOR")):
+        return "异或门"
+    if key.startswith(("XNR", "GXNR")):
+        return "同或门"
+    if re.match(r"^(G)?(ND|NAND|IND|IIND|GNAND|GND|GIND)\d", key) or re.match(
+        r"^ND\d",
+        key,
+    ):
+        return "与非门"
+    if re.match(r"^(G)?(NR|NOR|INR|IINR|GNOR|GNR)\d", key) or re.match(
+        r"^NR\d",
+        key,
+    ):
+        return "或非门"
+    if (
+        re.match(r"^(G)?AN\d", key)
+        or re.match(r"^GAND", key)
+        or re.match(r"^GAN\d", key)
+    ):
+        return "与门"
+    if re.match(r"^(G)?OR\d", key) or re.match(r"^GOR\d", key):
+        return "或门"
+    if key.startswith("AP"):
+        return "辅助单元"
+    return ""
+
+
+def format_column_a_label(function_key: str) -> str:
+    """Build merged-cell text: function key plus Chinese brief."""
+    chinese = describe_function_key(function_key)
+    if chinese:
+        return f"{function_key}\n{chinese}"
+    return function_key
+
+
 def make_display_key(
     name: str,
     function_keys: Sequence[str],
@@ -560,17 +743,19 @@ def build_rows(groups: Dict[str, List[GroupItem]]) -> List[CellRow]:
 
     Only identical full cell names share a row (both NP and C1 filled).
     NP-only and C1-only cells each get their own row; they are never
-    zip-paired across libraries.
+    zip-paired across libraries. Column A shows function key plus a short
+    Chinese description.
     """
     rows: List[CellRow] = []
     for key in sorted(groups.keys()):
+        display = format_column_a_label(key)
         exact_matches, np_only, c1_only = _partition_group(groups[key])
         for cell in exact_matches:
-            rows.append((key, cell, cell))
+            rows.append((display, cell, cell))
         for cell in np_only:
-            rows.append((key, cell, None))
+            rows.append((display, cell, None))
         for cell in c1_only:
-            rows.append((key, None, cell))
+            rows.append((display, None, cell))
     return rows
 
 

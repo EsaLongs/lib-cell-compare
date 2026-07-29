@@ -73,7 +73,7 @@ pip install -r requirements.txt
 ## 说明
 
 - 读取两个 list 文件，跳过空行与 `rg:` 开头行
-- A 列 = 有序 function key 的首次合格前缀命中；未命中则保留匹配前字符串并告警
+- A 列 = 有序 function key 的首次合格前缀命中，合并单元格内附中文简述（如 `AN2` + 与门）；未命中则保留匹配前字符串并告警
 - 写出三列 Excel：`function_key | NP1PP | C1Y`；A 列按 key 合并
 - 组内仅全名完全相同才左右同行；NP-only / C1-only 各占一行
 - Excel：字号 16、首行/首列加粗、B=C 非空浅绿、首行冻结（首行无下边框）、分组上下边框横跨 A–C
