@@ -3,13 +3,15 @@
 """Compare cell lists from two process libraries and write an Excel report.
 
 Usage:
+    python3 compare_cells.py --function-keys-file preview/function_key_zh.txt
     python3 compare_cells.py --function-keys OAI2211 OAI22 AN2 AN3
-    python3 compare_cells.py --function-keys-file preview/function_keys.txt
 
-Column A is the first --function-keys entry that is a prefix of the cell
-name (order matters: put longer forms first, e.g. OAI2211 before OAI22),
-plus a short Chinese function description in the merged cell.
-Matched cells are not reconsidered by later keys.
+One KEY<TAB>中文 file is enough: column 1 is match order, column 2 is the
+Chinese label shown in Excel column A (edit the file to change labels).
+
+Column A uses the first table key that is a qualified prefix of the cell
+name (order matters: put longer forms first). Matched cells are not
+reconsidered by later keys.
 
 Only identical full cell names share a data row; NP-only / C1-only cells
 each get their own row under the shared function key.
@@ -221,9 +223,11 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         metavar="PATH",
         dest="function_keys_file",
         help=(
-            "Optional file with one function key per line (# comments / "
-            "blank lines skipped). Keys are appended after --function-keys "
-            "in the same first-match-wins order."
+            "Ordered key table file. Prefer KEY<TAB>中文 (one pair per "
+            "line), which alone supplies both matching order and Chinese "
+            "labels (e.g. preview/function_key_zh.txt). Plain one-token "
+            "keys per line are also accepted. Appended after "
+            "--function-keys; first-match-wins."
         ),
     )
     parser.add_argument(
@@ -232,11 +236,10 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         metavar="PATH",
         dest="function_key_zh_file",
         help=(
-            "Optional TSV map of KEY<TAB>中文 for column-A labels "
-            "(e.g. preview/function_key_zh.txt). Editable; missing keys "
-            "fall back to built-in describe_function_key(). If omitted and "
-            "--function-keys-file is set, auto-loads the sibling "
-            "function_key_zh.txt when present."
+            "Same KEY<TAB>中文 table as --function-keys-file. Use this "
+            "alone when the table is your only config; or use it to "
+            "override Chinese when keys come from elsewhere. Missing "
+            "Chinese falls back to built-in describe_function_key()."
         ),
     )
     parser.add_argument(
@@ -245,9 +248,9 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         metavar="PATH",
         dest="dump_suggested_keys",
         help=(
-            "Write a longest-first suggested key list from the input cell "
-            "names to PATH, also write PATH with suffix replaced by "
-            "_zh.txt (or .zh.txt companion) for KEY\\t中文, then exit."
+            "Write a longest-first KEY<TAB>中文 table from the input cell "
+            "names to PATH (single file; edit the Chinese column later), "
+            "then exit."
         ),
     )
     parser.add_argument(
@@ -336,69 +339,102 @@ def parse_format_replace(raw: str) -> List[Tuple[str, str]]:
     return mappings
 
 
-def load_function_keys_file(filepath: str) -> List[str]:
-    """Load ordered function keys from a text file (one key per line)."""
+def load_function_key_table(
+    filepath: str,
+) -> Tuple[List[str], Dict[str, str]]:
+    """Load ordered keys and optional Chinese from one table file.
+
+    Accepted lines (comments / blanks skipped):
+    - ``KEY<TAB>中文`` — preferred; one file for match order + labels
+    - ``KEY`` — key only; Chinese falls back to built-in rules later
+    """
     keys: List[str] = []
-    with open(filepath, encoding="utf-8") as handle:
-        for line_number, line in enumerate(handle, start=1):
-            stripped = line.strip()
-            if not stripped or stripped.startswith("#"):
-                continue
-            if any(char.isspace() for char in stripped):
-                print(
-                    f"Invalid key in {filepath}:{line_number}: {stripped!r} "
-                    "(keys must be a single token per line)",
-                    file=sys.stderr,
-                )
-                sys.exit(2)
-            keys.append(stripped)
-    return keys
-
-
-def load_function_key_zh_file(filepath: str) -> Dict[str, str]:
-    """Load KEY -> Chinese map from a TSV file (key<TAB>chinese)."""
     mapping: Dict[str, str] = {}
     with open(filepath, encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, start=1):
             stripped = line.strip()
             if not stripped or stripped.startswith("#"):
                 continue
-            if "\t" not in stripped:
+            if "\t" in stripped:
+                key, chinese = stripped.split("\t", 1)
+                key = key.strip()
+                chinese = chinese.strip()
+                if not key or any(char.isspace() for char in key):
+                    print(
+                        f"Invalid key in {filepath}:{line_number}: "
+                        f"{stripped!r} (KEY must be a single token)",
+                        file=sys.stderr,
+                    )
+                    sys.exit(2)
+                keys.append(key)
+                if chinese:
+                    mapping[key] = chinese
+                continue
+            if any(char.isspace() for char in stripped):
                 print(
-                    f"Invalid zh map in {filepath}:{line_number}: {stripped!r} "
-                    "(expected KEY<TAB>中文)",
+                    f"Invalid key in {filepath}:{line_number}: {stripped!r} "
+                    "(use KEY or KEY<TAB>中文 per line)",
                     file=sys.stderr,
                 )
                 sys.exit(2)
-            key, chinese = stripped.split("\t", 1)
-            key = key.strip()
-            chinese = chinese.strip()
-            if not key:
-                print(
-                    f"Invalid zh map in {filepath}:{line_number}: empty key",
-                    file=sys.stderr,
-                )
-                sys.exit(2)
-            mapping[key] = chinese
+            keys.append(stripped)
+    return keys, mapping
+
+
+def load_function_keys_file(filepath: str) -> List[str]:
+    """Load ordered function keys (wrapper; prefer load_function_key_table)."""
+    keys, _mapping = load_function_key_table(filepath)
+    return keys
+
+
+def load_function_key_zh_file(filepath: str) -> Dict[str, str]:
+    """Load KEY -> Chinese map (wrapper; prefer load_function_key_table)."""
+    _keys, mapping = load_function_key_table(filepath)
     return mapping
 
 
-def resolve_function_keys(
+def resolve_function_key_config(
     cli_keys: Sequence[str],
     keys_file: str,
-) -> List[str]:
-    """Merge CLI keys and optional file keys; require a non-empty list."""
+    zh_file: str,
+) -> Tuple[List[str], Dict[str, str], str]:
+    """Resolve ordered keys + Chinese map from CLI and optional files.
+
+    One ``KEY<TAB>中文`` file is enough: pass it as ``--function-keys-file``
+    or ``--function-key-zh-file``. Returns (keys, zh_map, table_path_note).
+    """
     keys = [key for key in cli_keys if key]
+    zh_map: Dict[str, str] = {}
+    table_note = ""
+
     if keys_file:
-        keys.extend(load_function_keys_file(keys_file))
+        file_keys, file_zh = load_function_key_table(keys_file)
+        keys.extend(file_keys)
+        zh_map.update(file_zh)
+        table_note = keys_file
+
+    if zh_file:
+        file_keys, file_zh = load_function_key_table(zh_file)
+        if not keys:
+            keys.extend(file_keys)
+        zh_map.update(file_zh)
+        table_note = zh_file
+    elif keys_file and not zh_map:
+        sibling = zh_path_for_keys_file(keys_file)
+        if os.path.isfile(sibling):
+            _unused_keys, file_zh = load_function_key_table(sibling)
+            zh_map.update(file_zh)
+            table_note = sibling
+
     if not keys:
         print(
-            "Error: provide --function-keys and/or --function-keys-file "
-            "with at least one key.",
+            "Error: provide --function-keys, --function-keys-file, and/or "
+            "--function-key-zh-file with at least one key "
+            "(KEY<TAB>中文 in one file is enough).",
             file=sys.stderr,
         )
         sys.exit(2)
-    return keys
+    return keys, zh_map, table_note
 
 
 def zh_path_for_keys_file(keys_path: str) -> str:
@@ -889,23 +925,20 @@ def dump_suggested_keys(
     cells: Sequence[str],
     output_path: str,
 ) -> Tuple[List[str], str]:
-    """Write longest-first keys and a KEY\\t中文 companion map."""
+    """Write one longest-first KEY\\t中文 table (match order + labels)."""
     roots = {extract_function_root(cell) for cell in cells}
     keys = sorted(root for root in roots if root)
     keys.sort(key=lambda item: (-len(item), item))
     with open(output_path, "w", encoding="utf-8") as handle:
-        handle.write("# Suggested --function-keys (longest first)\n")
+        handle.write("# key\tchinese\n")
+        handle.write(
+            "# One file for both: column1 = match order, column2 = A-column "
+            "Chinese (edit freely).\n"
+        )
         handle.write(f"# cells={len(cells)} keys={len(keys)}\n")
         for key in keys:
-            handle.write(f"{key}\n")
-
-    zh_path = zh_path_for_keys_file(output_path)
-    with open(zh_path, "w", encoding="utf-8") as handle:
-        handle.write("# key\tchinese\n")
-        handle.write("# Edit the Chinese column; used by --function-key-zh-file\n")
-        for key in keys:
             handle.write(f"{key}\t{describe_function_key(key)}\n")
-    return keys, zh_path
+    return keys, output_path
 
 
 def _partition_group(
@@ -1083,32 +1116,31 @@ def main(argv: Optional[Sequence[str]] = None) -> int:  # pylint: disable=too-ma
     )
 
     if args.dump_suggested_keys:
-        keys, zh_path = dump_suggested_keys(all_cells, args.dump_suggested_keys)
-        print(
-            f"Wrote {len(keys)} suggested keys to {args.dump_suggested_keys}"
+        keys, table_path = dump_suggested_keys(
+            all_cells, args.dump_suggested_keys
         )
-        print(f"Wrote KEY\\t中文 map to {zh_path}")
+        print(
+            f"Wrote {len(keys)} KEY\\t中文 rows to {table_path} "
+            "(one file for match order + Chinese)"
+        )
         return 0
 
-    function_keys = resolve_function_keys(
+    function_keys, zh_map, table_note = resolve_function_key_config(
         args.function_keys,
         args.function_keys_file,
+        args.function_key_zh_file,
     )
-    zh_map: Dict[str, str] = {}
-    zh_file = args.function_key_zh_file
-    if not zh_file and args.function_keys_file:
-        candidate = zh_path_for_keys_file(args.function_keys_file)
-        if os.path.isfile(candidate):
-            zh_file = candidate
-    if zh_file:
-        zh_map = load_function_key_zh_file(zh_file)
-        print(f"Chinese map file: {zh_file}")
     patterns = split_format_filter(args.format_filter)
     replace_mappings = parse_format_replace(args.format_replace)
     regex_filters = compile_regex_filters(patterns)
     regex_replaces = compile_regex_replaces(replace_mappings)
     print(f"Function keys: {len(function_keys)}")
-    print(f"Chinese map entries: {len(zh_map) if zh_map else '(builtin fallback)'}")
+    if table_note:
+        print(f"Key/Chinese table: {table_note}")
+    print(
+        f"Chinese map entries: "
+        f"{len(zh_map) if zh_map else '(builtin fallback)'}"
+    )
     print(f"Regex filters (ordered): {patterns or '(none)'}")
     print(f"Regex replaces (ordered): {replace_mappings or '(none)'}")
 
